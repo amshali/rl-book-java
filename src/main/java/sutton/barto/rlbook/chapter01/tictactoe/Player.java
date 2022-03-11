@@ -76,20 +76,25 @@ public class Player implements IPlayer {
     states.clear();
   }
 
-  @Override
-  public Action takeAction() {
-    State state = states.get(states.size() - 1);
-    List<State> nextStates = new ArrayList<>();
-    List<Position> nextPositions = new ArrayList<>();
+  private List<Position> validPositions(State state) {
+    List<Position> positions = new ArrayList<>();
     for (int i = 0; i < BOARD_ROWS; i++) {
       for (int j = 0; j < BOARD_COLS; j++) {
         Position p = new Position(i, j);
         if (state.data(p) == 0) {
-          nextPositions.add(p);
-          nextStates.add(state.nextState(p, symbol));
+          positions.add(p);
         }
       }
     }
+    return positions;
+  }
+
+  @Override
+  public Action takeAction() {
+    State state = states.get(states.size() - 1);
+    List<State> nextStates = new ArrayList<>();
+    List<Position> nextPositions = validPositions(state);
+    nextPositions.forEach((p -> nextStates.add(state.nextState(p, symbol))));
     // Exploring the state space: with the exploratory rate, we try to randomly choose
     // the next state sometimes.
     BinomialDistribution binomialDistribution = new BinomialDistribution(1, exploreRate);

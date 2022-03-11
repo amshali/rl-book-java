@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class Game {
 
@@ -31,9 +32,17 @@ public class Game {
       description = "Play against the computer using the trained model.")
   Boolean playFlag = false;
 
+  @Parameter(names = { "--explore-rate", "-er" },
+      description = "Exploration rate.")
+  Double exploreRate = 0.1;
+
   public static final int BOARD_ROWS = 3;
   public static final int BOARD_COLS = 3;
+  public static final int P1_SYMBOL = 1;
+  public static final int P2_SYMBOL = -1;
   private final Map<Long, State> allStates;
+  private final Random random = new Random();
+
   public Game() {
     allStates = getAllStates();
   }
@@ -42,12 +51,14 @@ public class Game {
    * @return map of hash to state
    */
   public static Map<Long, State> getAllStates() {
-    int currentSymbol = 1;
     State currentState = new State();
-    Map<Long, State> allStates = new HashMap<>();
-    allStates.put(currentState.hash(), currentState);
-    getAllStatesRec(currentState, currentSymbol, allStates);
-    return allStates;
+    Map<Long, State> all1 = new HashMap<>();
+    Map<Long, State> all2 = new HashMap<>();
+    all1.put(currentState.hash(), currentState);
+    getAllStatesRec(currentState, P1_SYMBOL, all1);
+    getAllStatesRec(currentState, P2_SYMBOL, all2);
+    all1.putAll(all2);
+    return all1;
   }
 
   private static void getAllStatesRec(State currentState, int currentSymbol,
@@ -69,16 +80,16 @@ public class Game {
   }
 
   public void train(int epochs) throws IOException {
-    IPlayer p1 = new Player(0.1, 0.1, allStates);
-    IPlayer p2 = new Player(0.1, 0.1, allStates);
+    IPlayer p1 = new Player(0.1, exploreRate, allStates);
+    IPlayer p2 = new Player(0.1, exploreRate, allStates);
     Judge judge = new Judge(p1, p2, true);
     double player1Wins = 0;
     double player2Wins = 0;
     double ties = 0;
     for (int i = 0; i < epochs; i++) {
       System.out.printf("Epoch %d\n", i);
-      int winner = judge.play(false);
-      if (winner == 1) {
+      int winner = judge.play(false, i % 2 == 0 ? p1 : p2);
+      if (winner == Game.P1_SYMBOL) {
         player1Wins++;
       } else if (winner == -1) {
         player2Wins++;
@@ -105,7 +116,7 @@ public class Game {
     double ties = 0;
     for (int i = 0; i < turns; i++) {
       System.out.printf("Turn %d\n", i);
-      int winner = judge.play(false);
+      int winner = judge.play(false, i % 2 == 0 ? p1 : p2);
       if (winner == 1) {
         player1Wins++;
       } else if (winner == -1) {
@@ -126,7 +137,7 @@ public class Game {
       IPlayer player2 = new HumanPlayer();
       Judge judge = new Judge(player1, player2, false);
       player1.loadPolicy(new File(Path.of(modelLocationFlag, "./p1_estimates.obj").toUri()));
-      int winner = judge.play(true);
+      int winner = judge.play(true, random.nextDouble() < 0.5 ? player1 : player2);
       if (winner == player2.symbol()) {
         System.out.printf("%sYou won!%s\n", ConsoleColors.GREEN_BRIGHT, ConsoleColors.RESET);
       } else if (winner == player1.symbol()) {
