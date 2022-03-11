@@ -32,15 +32,26 @@ public class HumanPlayer implements IPlayer {
 
   @Override
   public Action takeAction() {
-    System.out.print("Input your position: ");
-    int pos = input.nextInt();
-    pos -= 1;
-    Position position = new Position(pos / Game.BOARD_ROWS, pos % Game.BOARD_COLS);
-    if (currentState.data(position) != 0) {
-      System.out.println("Invalid selection!");
-      takeAction();
+    while (true) {
+      System.out.print("Input your position: ");
+      if (!input.hasNextInt()) {
+        System.out.println("Invalid selection!");
+        input.next();
+        continue;
+      }
+      int pos = input.nextInt();
+      if (pos >= 1 && pos <= 9) {
+        pos -= 1;
+        Position position = new Position(pos / Game.BOARD_ROWS, pos % Game.BOARD_COLS);
+        if (currentState.data(position) != 0) {
+          System.out.println("Invalid selection!");
+          continue;
+        }
+        return new Action(position, symbol);
+      } else {
+        System.out.println("Invalid selection!");
+      }
     }
-    return new Action(position, symbol);
   }
 
   @Override
