@@ -1,5 +1,8 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
+/**
+ * A position on the X-O board.
+ */
 public class Position {
   private final int row;
   private final int column;
