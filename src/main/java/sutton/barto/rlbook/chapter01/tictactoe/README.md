@@ -1,5 +1,10 @@
 # Tic Tac Toe
 
+This game is written using the *Value function* method. Quoting from the book.
+> In the end, evolutionary and value function methods both search the space of policies,
+> but learning a value function takes advantage of information available during the course
+> of play.
+
 ## How to run?
 
 ### Compile
