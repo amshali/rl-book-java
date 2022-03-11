@@ -51,7 +51,7 @@ public class Game {
    * @return map of hash to state
    */
   public static Map<Long, State> getAllStates() {
-    State currentState = new State();
+    State currentState = State.init();
     Map<Long, State> all1 = new HashMap<>();
     Map<Long, State> all2 = new HashMap<>();
     all1.put(currentState.hash(), currentState);
@@ -140,11 +140,13 @@ public class Game {
       if (humanFirst) {
         player1 = new HumanPlayer(P1_SYMBOL);
         humanSymbol = P1_SYMBOL;
+        System.out.println("You are 'O'.");
         computerSymbol = P2_SYMBOL;
         player2 = new Player(P2_SYMBOL, 0, 0, allStates);
         player2.loadPolicy(new File(Path.of(modelLocationFlag, "./p2_estimates.obj").toUri()));
       } else {
         player2 = new HumanPlayer(P2_SYMBOL);
+        System.out.println("You are 'X'.");
         humanSymbol = P2_SYMBOL;
         computerSymbol = P1_SYMBOL;
         player1 = new Player(P1_SYMBOL, 0, 0, allStates);

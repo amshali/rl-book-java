@@ -12,7 +12,7 @@ public class Judge {
     this.p2 = p2;
     this.feedback = feedback;
     currentPlayer = null;
-    currentState = new State();
+    currentState = State.init();
   }
 
   public void giveReward() {
@@ -31,7 +31,7 @@ public class Judge {
   public void reset() {
     p1.reset();
     p2.reset();
-    currentState = new State();
+    currentState = State.init();
     currentPlayer = null;
   }
 

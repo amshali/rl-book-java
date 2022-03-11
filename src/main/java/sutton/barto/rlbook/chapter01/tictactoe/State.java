@@ -13,8 +13,14 @@ public class State {
   private int winner = 0;
   private Long hash = null;
   private Boolean end = null;
+  private Boolean init = true;
+  private Integer justPlayedSymbol;
 
-  public State() {
+  public static State init() {
+    return new State();
+  }
+
+  private State() {
     for (int i = 0; i < Game.BOARD_ROWS; i++) {
       Arrays.fill(board[i], 0);
     }
@@ -64,7 +70,7 @@ public class State {
       StringBuilder sb = new StringBuilder("| ");
       for (int j = 0; j < Game.BOARD_COLS; j++) {
         if (board[i][j] == Game.P1_SYMBOL) {
-          sb.append("o");
+          sb.append("O");
         }
         if (board[i][j] == 0) {
           sb.append(ConsoleColors.GREEN_UNDERLINED);
@@ -72,7 +78,7 @@ public class State {
           sb.append(ConsoleColors.RESET);
         }
         if (board[i][j] == Game.P2_SYMBOL) {
-          sb.append("x");
+          sb.append("X");
         }
         sb.append(" | ");
       }
@@ -86,6 +92,9 @@ public class State {
   }
 
   public Long hash() {
+    if (init) {
+      hash = 0L;
+    }
     if (hash == null) {
       long h = 0L;
       for (int i = 0; i < Game.BOARD_ROWS; i++) {
@@ -97,7 +106,7 @@ public class State {
           }
         }
       }
-      hash = h;
+      hash = h * justPlayedSymbol;
     }
     return hash;
   }
@@ -108,6 +117,8 @@ public class State {
 
   public State nextState(Position p, int symbol) {
     State ns = new State();
+    ns.init = false;
+    ns.justPlayedSymbol = symbol;
     for (int i = 0; i < board.length; i++) {
       ns.board[i] = Arrays.copyOf(board[i], board[i].length);
     }
