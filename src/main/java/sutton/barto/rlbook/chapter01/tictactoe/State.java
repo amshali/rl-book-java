@@ -16,14 +16,14 @@ public class State {
   private Boolean init = true;
   private Integer justPlayedSymbol;
 
-  public static State init() {
-    return new State();
-  }
-
   private State() {
     for (int i = 0; i < Game.BOARD_ROWS; i++) {
       Arrays.fill(board[i], 0);
     }
+  }
+
+  public static State init() {
+    return new State();
   }
 
   public boolean end() {
@@ -38,7 +38,8 @@ public class State {
         results.add(IntStream.range(0, Game.BOARD_ROWS).map(j -> board[j][finalI]).sum());
       }
       results.add(IntStream.range(0, Game.BOARD_ROWS).map(i -> board[i][i]).sum());
-      results.add(IntStream.range(0, Game.BOARD_ROWS).map(i -> board[i][Game.BOARD_ROWS - 1 - i]).sum());
+      results.add(
+          IntStream.range(0, Game.BOARD_ROWS).map(i -> board[i][Game.BOARD_ROWS - 1 - i]).sum());
       for (int result : results) {
         if (result == 3) {
           winner = Game.P1_SYMBOL;

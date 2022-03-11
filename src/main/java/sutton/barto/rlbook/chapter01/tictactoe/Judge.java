@@ -1,11 +1,11 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
 public class Judge {
-  private State currentState;
   private final IPlayer p1;
   private final IPlayer p2;
-  private IPlayer currentPlayer;
   private final boolean feedback;
+  private State currentState;
+  private IPlayer currentPlayer;
 
   public Judge(IPlayer p1, IPlayer p2, boolean feedback) {
     this.p1 = p1;

@@ -15,5 +15,6 @@ public interface IPlayer {
   Action takeAction();
 
   void savePolicy(File file) throws IOException;
+
   void loadPolicy(File file) throws IOException, ClassNotFoundException;
 }

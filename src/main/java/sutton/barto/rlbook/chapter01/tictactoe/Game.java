@@ -14,40 +14,37 @@ import java.util.Random;
 
 public class Game {
 
-  @Parameter(names = { "--model-location", "-m" },
-      description = "Directory of the model to store estimates.")
-  String modelLocationFlag;
-
-  @Parameter(names = { "--train", "-t" }, validateWith = PositiveInteger.class,
-      description = "Train the players and write the new models. Parameter value is the number of" +
-          " epochs to train."
-  )
-  Integer trainFlag;
-
-  @Parameter(names = { "--compete", "-c" }, validateWith = PositiveInteger.class,
-      description = "Compete the players using the model. Parameter value is the number of turns.")
-  Integer competeFlag;
-
-  @Parameter(names = { "--play", "-p" },
-      description = "Play against the computer using the trained model.")
-  Boolean playFlag = false;
-
-  @Parameter(names = { "--explore-rate", "-er" },
-      description = "Exploration rate.")
-  Double exploreRate = 0.1;
-
   public static final int BOARD_ROWS = 3;
   public static final int BOARD_COLS = 3;
   public static final int P1_SYMBOL = 1;
   public static final int P2_SYMBOL = -1;
   private final Map<Long, State> allStates;
   private final Random random = new Random();
+  @Parameter(names = {"--model-location", "-m"},
+      description = "Directory of the model to store estimates.")
+  String modelLocationFlag;
+  @Parameter(names = {"--train", "-t"}, validateWith = PositiveInteger.class,
+      description = "Train the players and write the new models. Parameter value is the number of" +
+          " epochs to train."
+  )
+  Integer trainFlag;
+  @Parameter(names = {"--compete", "-c"}, validateWith = PositiveInteger.class,
+      description = "Compete the players using the model. Parameter value is the number of turns.")
+  Integer competeFlag;
+  @Parameter(names = {"--play", "-p"},
+      description = "Play against the computer using the trained model.")
+  Boolean playFlag = false;
+  @Parameter(names = {"--explore-rate", "-er"},
+      description = "Exploration rate.")
+  Double exploreRate = 0.1;
 
   public Game() {
     allStates = getAllStates();
   }
+
   /**
    * Generates all the possible states.
+   *
    * @return map of hash to state
    */
   public static Map<Long, State> getAllStates() {
@@ -77,6 +74,15 @@ public class Game {
         }
       }
     }
+  }
+
+  public static void main(String[] args) {
+    Game game = new Game();
+    JCommander.newBuilder()
+        .addObject(game)
+        .build()
+        .parse(args);
+    game.run();
   }
 
   public void train(int epochs) throws IOException {
@@ -187,14 +193,5 @@ public class Game {
         e.printStackTrace();
       }
     }
-  }
-
-  public static void main(String[] args) {
-    Game game = new Game();
-    JCommander.newBuilder()
-        .addObject(game)
-        .build()
-        .parse(args);
-    game.run();
   }
 }

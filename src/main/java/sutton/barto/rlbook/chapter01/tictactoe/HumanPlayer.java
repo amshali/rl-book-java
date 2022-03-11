@@ -4,9 +4,9 @@ import java.io.File;
 import java.util.Scanner;
 
 public class HumanPlayer implements IPlayer {
+  private final Scanner input = new Scanner(System.in);
   private int symbol;
   private State currentState;
-  private final Scanner input = new Scanner(System.in);
 
   public HumanPlayer(int symbol) {
     this.symbol = symbol;

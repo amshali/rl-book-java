@@ -1,6 +1,5 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import sutton.barto.rlbook.Tuple;
 
 import java.io.*;
@@ -15,10 +14,10 @@ public class Player implements IPlayer {
   private final double stepSize;
   private final double exploreRate;
   private final Map<Long, State> allStates;
-  private Map<Long, Double> estimates = new HashMap<>();
   private final List<State> states = new ArrayList<>();
-  private int symbol;
   private final Random random = new Random();
+  private Map<Long, Double> estimates = new HashMap<>();
+  private int symbol;
 
   public Player(int symbol, double stepSize, double exploreRate, Map<Long, State> allStates) {
     this.stepSize = stepSize;
