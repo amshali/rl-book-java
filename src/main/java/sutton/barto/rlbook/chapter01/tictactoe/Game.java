@@ -80,18 +80,18 @@ public class Game {
   }
 
   public void train(int epochs) throws IOException {
-    IPlayer p1 = new Player(0.1, exploreRate, allStates);
-    IPlayer p2 = new Player(0.1, exploreRate, allStates);
+    IPlayer p1 = new Player(P1_SYMBOL, 0.1, exploreRate, allStates);
+    IPlayer p2 = new Player(P2_SYMBOL, 0.1, exploreRate, allStates);
     Judge judge = new Judge(p1, p2, true);
     double player1Wins = 0;
     double player2Wins = 0;
     double ties = 0;
     for (int i = 0; i < epochs; i++) {
       System.out.printf("Epoch %d\n", i);
-      int winner = judge.play(false, i % 2 == 0 ? p1 : p2);
+      int winner = judge.play(false);
       if (winner == Game.P1_SYMBOL) {
         player1Wins++;
-      } else if (winner == -1) {
+      } else if (winner == Game.P2_SYMBOL) {
         player2Wins++;
       } else {
         ties++;
@@ -106,8 +106,8 @@ public class Game {
   }
 
   public void compete(int turns) throws IOException, ClassNotFoundException {
-    IPlayer p1 = new Player(0.0, 0.0, allStates);
-    IPlayer p2 = new Player(0.0, 0.0, allStates);
+    IPlayer p1 = new Player(P1_SYMBOL, 0.0, 0.0, allStates);
+    IPlayer p2 = new Player(P2_SYMBOL, 0.0, 0.0, allStates);
     Judge judge = new Judge(p1, p2, false);
     p1.loadPolicy(new File(Path.of(modelLocationFlag, "./p1_estimates.obj").toUri()));
     p2.loadPolicy(new File(Path.of(modelLocationFlag, "./p2_estimates.obj").toUri()));
@@ -116,10 +116,10 @@ public class Game {
     double ties = 0;
     for (int i = 0; i < turns; i++) {
       System.out.printf("Turn %d\n", i);
-      int winner = judge.play(false, i % 2 == 0 ? p1 : p2);
-      if (winner == 1) {
+      int winner = judge.play(false);
+      if (winner == P1_SYMBOL) {
         player1Wins++;
-      } else if (winner == -1) {
+      } else if (winner == P2_SYMBOL) {
         player2Wins++;
       } else {
         ties++;
@@ -133,14 +133,28 @@ public class Game {
 
   public void play() throws IOException, ClassNotFoundException {
     while (true) {
-      IPlayer player1 = new Player(0, 0, allStates);
-      IPlayer player2 = new HumanPlayer();
+      boolean humanFirst = Math.abs(random.nextInt()) % 2 == 0;
+      IPlayer player1, player2;
+      int humanSymbol = 0;
+      int computerSymbol = 0;
+      if (humanFirst) {
+        player1 = new HumanPlayer(P1_SYMBOL);
+        humanSymbol = P1_SYMBOL;
+        computerSymbol = P2_SYMBOL;
+        player2 = new Player(P2_SYMBOL, 0, 0, allStates);
+        player2.loadPolicy(new File(Path.of(modelLocationFlag, "./p2_estimates.obj").toUri()));
+      } else {
+        player2 = new HumanPlayer(P2_SYMBOL);
+        humanSymbol = P2_SYMBOL;
+        computerSymbol = P1_SYMBOL;
+        player1 = new Player(P1_SYMBOL, 0, 0, allStates);
+        player1.loadPolicy(new File(Path.of(modelLocationFlag, "./p1_estimates.obj").toUri()));
+      }
       Judge judge = new Judge(player1, player2, false);
-      player1.loadPolicy(new File(Path.of(modelLocationFlag, "./p1_estimates.obj").toUri()));
-      int winner = judge.play(true, random.nextDouble() < 0.5 ? player1 : player2);
-      if (winner == player2.symbol()) {
+      int winner = judge.play(true);
+      if (winner == humanSymbol) {
         System.out.printf("%sYou won!%s\n", ConsoleColors.GREEN_BRIGHT, ConsoleColors.RESET);
-      } else if (winner == player1.symbol()) {
+      } else if (winner == computerSymbol) {
         System.out.printf("%sYou lost!%s\n", ConsoleColors.RED_BRIGHT, ConsoleColors.RESET);
       } else {
         System.out.println("Tie!");

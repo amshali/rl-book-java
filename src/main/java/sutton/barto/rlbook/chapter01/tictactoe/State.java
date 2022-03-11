@@ -35,11 +35,11 @@ public class State {
       results.add(IntStream.range(0, Game.BOARD_ROWS).map(i -> board[i][Game.BOARD_ROWS - 1 - i]).sum());
       for (int result : results) {
         if (result == 3) {
-          winner = 1;
+          winner = Game.P1_SYMBOL;
           end = true;
         }
         if (result == -3) {
-          winner = -1;
+          winner = Game.P2_SYMBOL;
           end = true;
         }
       }
@@ -63,7 +63,7 @@ public class State {
       System.out.println("-------------");
       StringBuilder sb = new StringBuilder("| ");
       for (int j = 0; j < Game.BOARD_COLS; j++) {
-        if (board[i][j] == 1) {
+        if (board[i][j] == Game.P1_SYMBOL) {
           sb.append("o");
         }
         if (board[i][j] == 0) {
@@ -71,7 +71,7 @@ public class State {
           sb.append(i * 3 + j + 1);
           sb.append(ConsoleColors.RESET);
         }
-        if (board[i][j] == -1) {
+        if (board[i][j] == Game.P2_SYMBOL) {
           sb.append("x");
         }
         sb.append(" | ");
@@ -90,7 +90,7 @@ public class State {
       long h = 0L;
       for (int i = 0; i < Game.BOARD_ROWS; i++) {
         for (int j = 0; j < Game.BOARD_COLS; j++) {
-          if (board[i][j] == -1) {
+          if (board[i][j] == Game.P2_SYMBOL) {
             h = h * 3 + 2;
           } else {
             h = h * 3 + board[i][j];

@@ -12,8 +12,6 @@ public class Judge {
     this.p2 = p2;
     this.feedback = feedback;
     currentPlayer = null;
-    this.p1.setSymbol(Game.P1_SYMBOL);
-    this.p2.setSymbol(Game.P2_SYMBOL);
     currentState = new State();
   }
 
@@ -42,10 +40,10 @@ public class Judge {
     p2.feedState(currentState);
   }
 
-  public int play(boolean show, final IPlayer firstPlayer) {
+  public int play(boolean show) {
     reset();
     feedCurrentState();
-    currentPlayer = firstPlayer;
+    currentPlayer = p1;
     while (true) {
       if (show) {
         currentState.printBoard();

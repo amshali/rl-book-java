@@ -20,10 +20,11 @@ public class Player implements IPlayer {
   private int symbol;
   private final Random random = new Random();
 
-  public Player(double stepSize, double exploreRate, Map<Long, State> allStates) {
+  public Player(int symbol, double stepSize, double exploreRate, Map<Long, State> allStates) {
     this.stepSize = stepSize;
     this.exploreRate = exploreRate;
     this.allStates = allStates;
+    setSymbol(symbol);
   }
 
   @Override
@@ -36,8 +37,7 @@ public class Player implements IPlayer {
     return symbol;
   }
 
-  @Override
-  public void setSymbol(int symbol) {
+  private void setSymbol(int symbol) {
     this.symbol = symbol;
     for (Map.Entry<Long, State> e : allStates.entrySet()) {
       State state = e.getValue();
@@ -94,14 +94,12 @@ public class Player implements IPlayer {
     State state = states.get(states.size() - 1);
     List<State> nextStates = new ArrayList<>();
     List<Position> nextPositions = validPositions(state);
+    Collections.shuffle(nextPositions);
     nextPositions.forEach((p -> nextStates.add(state.nextState(p, symbol))));
     // Exploring the state space: with the exploratory rate, we try to randomly choose
     // the next state sometimes.
-    BinomialDistribution binomialDistribution = new BinomialDistribution(1, exploreRate);
-    if (binomialDistribution.sample() == 1) {
-      states.clear();
-      Position p = nextPositions.get(random.nextInt(nextPositions.size()));
-      return new Action(p, this.symbol);
+    if (random.nextDouble() < exploreRate) {
+      return new Action(nextPositions.get(0), this.symbol);
     }
     // Find the next state with the highest value:
     List<Tuple<Double, Position>> valuesPositions =

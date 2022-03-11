@@ -7,6 +7,11 @@ public class HumanPlayer implements IPlayer {
   private int symbol;
   private State currentState;
   private final Scanner input = new Scanner(System.in);
+
+  public HumanPlayer(int symbol) {
+    this.symbol = symbol;
+  }
+
   @Override
   public void reset() {
   }
@@ -14,11 +19,6 @@ public class HumanPlayer implements IPlayer {
   @Override
   public int symbol() {
     return symbol;
-  }
-
-  @Override
-  public void setSymbol(int symbol) {
-    this.symbol = symbol;
   }
 
   @Override

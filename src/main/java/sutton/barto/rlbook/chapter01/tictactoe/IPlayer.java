@@ -8,8 +8,6 @@ public interface IPlayer {
 
   int symbol();
 
-  void setSymbol(int symbol);
-
   void feedState(State state);
 
   void feedReward(double reward);
