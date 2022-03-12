@@ -141,8 +141,8 @@ public class Game {
     while (true) {
       boolean humanFirst = Math.abs(random.nextInt()) % 2 == 0;
       IPlayer player1, player2;
-      int humanSymbol = 0;
-      int computerSymbol = 0;
+      int humanSymbol;
+      int computerSymbol;
       if (humanFirst) {
         player1 = new HumanPlayer(P1_SYMBOL);
         humanSymbol = P1_SYMBOL;

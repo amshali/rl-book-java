@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 public class HumanPlayer implements IPlayer {
   private final Scanner input = new Scanner(System.in);
-  private int symbol;
+  private final int symbol;
   private State currentState;
 
   public HumanPlayer(int symbol) {

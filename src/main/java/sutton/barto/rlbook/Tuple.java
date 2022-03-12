@@ -1,8 +1,8 @@
 package sutton.barto.rlbook;
 
 public class Tuple<A, B> {
-  private A first;
-  private B second;
+  private final A first;
+  private final B second;
 
   public Tuple(A first, B second) {
     this.first = first;
@@ -13,17 +13,7 @@ public class Tuple<A, B> {
     return first;
   }
 
-  public Tuple<A, B> setFirst(A first) {
-    this.first = first;
-    return this;
-  }
-
   public B second() {
     return second;
-  }
-
-  public Tuple<A, B> setSecond(B second) {
-    this.second = second;
-    return this;
   }
 }
