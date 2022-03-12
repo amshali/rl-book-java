@@ -44,19 +44,21 @@ public class State {
         if (result == 3) {
           winner = Game.P1_SYMBOL;
           end = true;
+          return true;
         }
         if (result == -3) {
           winner = Game.P2_SYMBOL;
           end = true;
+          return true;
         }
       }
+      // Computing the tie:
       int sum = 0;
       for (int i = 0; i < Game.BOARD_ROWS; i++) {
         for (int j = 0; j < Game.BOARD_COLS; j++) {
           sum += Math.abs(board[i][j]);
         }
       }
-      // Tie:
       if (sum == Game.BOARD_COLS * Game.BOARD_ROWS) {
         winner = 0;
         end = true;
