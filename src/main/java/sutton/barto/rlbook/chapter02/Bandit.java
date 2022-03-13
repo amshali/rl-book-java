@@ -1,6 +1,7 @@
 package sutton.barto.rlbook.chapter02;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
+import sutton.barto.rlbook.Utils;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -62,18 +63,6 @@ public class Bandit {
     this(10, 0.0, 0.0, 0.1, false, null, false, false, 0.0);
   }
 
-  public static int argmax(double[] a) {
-    double max = Double.MIN_VALUE;
-    int maxIndex = -1;
-    for (int i = 0; i < a.length; i++) {
-      if (a[i] > max) {
-        maxIndex = i;
-        max = a[i];
-      }
-    }
-    return maxIndex;
-  }
-
   public Bandit(int kArms, double epsilon, double initial, double stepSize, boolean sampleAverages,
                 Double ucbParam, boolean gradient, boolean gradientBaseline, double trueReward) {
     this.kArms = kArms;
@@ -92,7 +81,7 @@ public class Bandit {
       qEst[i] = initial;
       actionCount[i] = 0;
     });
-    bestAction = argmax(qTrue);
+    bestAction = Utils.argmax(qTrue);
   }
 
   public int getAction() {
@@ -116,7 +105,7 @@ public class Bandit {
         }
       }
     }
-    return argmax(qEst);
+    return Utils.argmax(qEst);
   }
 
   /**
