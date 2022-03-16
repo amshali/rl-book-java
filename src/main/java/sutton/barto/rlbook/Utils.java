@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
 
 public class Utils {
   public static int argmax(double[] a) {
-    double max = Double.NEGATIVE_INFINITY;
+    var max = Double.NEGATIVE_INFINITY;
     int maxIndex = -1;
     for (int i = 0; i < a.length; i++) {
       if (a[i] > max) {
@@ -17,7 +17,7 @@ public class Utils {
   }
 
   public static int argmin(double[] a) {
-    double min = Double.POSITIVE_INFINITY;
+    var min = Double.POSITIVE_INFINITY;
     int minIndex = -1;
     for (int i = 0; i < a.length; i++) {
       if (a[i] < min) {
@@ -29,7 +29,7 @@ public class Utils {
   }
 
   public static List<Vector<Integer>> permutations(Vector<Integer> dims) {
-    Vector<Integer> current = new Vector<>(dims.size());
+    var current = new Vector<Integer>(dims.size());
     dims.forEach(d -> {
       if (d < 1) {
         throw new RuntimeException("Invalid dimension value " + d + " for permutation. Must be > " +
@@ -37,7 +37,7 @@ public class Utils {
       }
       current.add(0);
     });
-    List<Vector<Integer>> results = new ArrayList<>();
+    var results = new ArrayList<Vector<Integer>>();
     results.add(new Vector<>(current));
     while (true) {
       for (int i = 0; i < dims.size(); i++) {
@@ -46,7 +46,7 @@ public class Utils {
           break;
         }
       }
-      Optional<Integer> sum = current.stream().reduce(Integer::sum);
+      var sum = current.stream().reduce(Integer::sum);
       if (sum.isPresent() && sum.get() == 0) {
         break;
       }
@@ -56,23 +56,23 @@ public class Utils {
   }
 
   public static <T> Vector<T> vectorOf(T... data) {
-    Vector<T> v = new Vector<>(data.length);
+    var v = new Vector<T>(data.length);
     Collections.addAll(v, data);
     return v;
   }
 
   public static <T> Vector<T> vectorOf(int size, T init) {
-    Vector<T> v = new Vector<>(size);
+    var v = new Vector<T>(size);
     IntStream.range(0, size).forEach(i -> v.add(init));
     return v;
   }
 
   public static void main(String[] args) {
-    Vector<Integer> dims = new Vector<>();
+    var dims = new Vector<Integer>();
     dims.add(3);
     dims.add(4);
     dims.add(3);
-    List<Vector<Integer>> perms = permutations(dims);
+    var perms = permutations(dims);
     perms.forEach(System.out::println);
   }
 }

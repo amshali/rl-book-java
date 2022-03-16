@@ -92,9 +92,9 @@ public class Bandit {
     }
     if (gradient) {
       var qEstExp = Arrays.stream(qEst).map(Math::exp);
-      double sum = qEstExp.sum();
-      double[] actionProb = qEstExp.map(d -> d / sum).toArray();
-      double rnd = random.nextDouble();
+      var sum = qEstExp.sum();
+      var actionProb = qEstExp.map(d -> d / sum).toArray();
+      var rnd = random.nextDouble();
       for (int i = 0; i < actionProb.length; i++) {
         if (rnd < actionProb[i]) {
           return indices[i];
