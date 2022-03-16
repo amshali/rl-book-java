@@ -69,17 +69,15 @@ public class Game {
   }
 
   public void figure2_3(int runs, int time) {
-    Bandit[] bandits = new Bandit[2];
+    var bandits = new Bandit[2];
     bandits[0] = Bandit.builder().kArms(10).epsilon(0.0).initial(5.0).build();
     bandits[1] = Bandit.builder().kArms(10).epsilon(0.1).initial(0.0).build();
-    Tuple<Vector<Vector<Double>>, Vector<Vector<Double>>>
-        results = banditSimulation(runs, time, Arrays.asList(bandits));
-    final XYChart
-        bestActionChart = createChart(1000, 500, "Time", "Best action %");
-    double[] timeAxis = IntStream.range(0, time).mapToDouble(t -> t).toArray();
+    var results = banditSimulation(runs, time, Arrays.asList(bandits));
+    final var bestActionChart = createChart(1000, 500, "Time", "Best action %");
+    var timeAxis = IntStream.range(0, time).mapToDouble(t -> t).toArray();
     IntStream.range(0, bandits.length).forEach(i -> {
-      Vector<Double> bActions = results.second().get(i);
-      double[] bestActionChoice = bActions.stream().mapToDouble(d -> d * 100).toArray();
+      var bActions = results.second().get(i);
+      var bestActionChoice = bActions.stream().mapToDouble(d -> d * 100).toArray();
       bestActionChart.addSeries("ε = " + bandits[i].epsilon() + ", q = " + bandits[i].initial(),
           timeAxis, bestActionChoice);
     });
@@ -96,7 +94,7 @@ public class Game {
   public Vector<Double> mean(Vector<Vector<Double>> data, int runs, int time) {
     Vector<Double> result = vectorOf(time, 0.0);
     IntStream.range(0, time).forEach((t) -> {
-      Double[] sum = new Double[]{0.0};
+      var sum = new Double[]{0.0};
       IntStream.range(0, runs).forEach(r -> {
         sum[0] = sum[0] + data.get(r).get(t);
       });
