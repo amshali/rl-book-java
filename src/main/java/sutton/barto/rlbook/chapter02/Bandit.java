@@ -5,7 +5,6 @@ import sutton.barto.rlbook.Utils;
 
 import java.util.Arrays;
 import java.util.Random;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 public class Bandit {
@@ -53,6 +52,7 @@ public class Bandit {
   private int time = 0;
   private int bestAction = -1;
   private double averageReward = 0.0;
+
   public Bandit(int kArms, double epsilon, double initial, double stepSize, boolean sampleAverages,
                 Double ucbParam, boolean gradient, boolean gradientBaseline, double trueReward) {
     this.kArms = kArms;
@@ -91,7 +91,7 @@ public class Bandit {
       // TODO: Implement!
     }
     if (gradient) {
-      DoubleStream qEstExp = Arrays.stream(qEst).map(Math::exp);
+      var qEstExp = Arrays.stream(qEst).map(Math::exp);
       double sum = qEstExp.sum();
       double[] actionProb = qEstExp.map(d -> d / sum).toArray();
       double rnd = random.nextDouble();
@@ -112,7 +112,7 @@ public class Bandit {
    * @return the reward
    */
   public double takeAction(int action) {
-    NormalDistribution normalDistribution = new NormalDistribution(0, 1);
+    var normalDistribution = new NormalDistribution(0, 1);
     double reward = normalDistribution.sample() + qTrue[action];
     time++;
     averageReward = (time - 1.0) / (time * averageReward) + reward / time;
@@ -131,7 +131,7 @@ public class Bandit {
   }
 
   public void reset() {
-    NormalDistribution normalDistribution = new NormalDistribution(0, 1);
+    var normalDistribution = new NormalDistribution(0, 1);
     qTrue = new double[kArms];
     qEst = new double[kArms];
     actionCount = new int[kArms];
