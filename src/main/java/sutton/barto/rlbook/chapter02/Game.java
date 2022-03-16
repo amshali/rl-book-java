@@ -1,6 +1,7 @@
 package sutton.barto.rlbook.chapter02;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -19,6 +20,10 @@ import java.util.stream.IntStream;
 import static sutton.barto.rlbook.Utils.vectorOf;
 
 public class Game {
+
+  @Parameter(names = {"--figure", "-f"}, description = "Figure to show")
+  String fFigure;
+
   public static void main(String[] args) {
     var game = new Game();
     JCommander.newBuilder()
@@ -29,8 +34,20 @@ public class Game {
   }
 
   public void run() {
-    figure2_2(2000, 1000);
-    figure2_3(2000, 1000);
+    switch (fFigure) {
+      case "figure2_2": {
+        figure2_2(2000, 1000);
+        break;
+      }
+      case "figure2_3": {
+        figure2_3(2000, 1000);
+        break;
+      }
+      default: {
+        System.err.printf("Invalid flag value: %s\n", fFigure);
+        System.exit(-1);
+      }
+    }
   }
 
   private XYChart createChart(int width, int height, String xTitle, String yTitle) {
@@ -69,9 +86,10 @@ public class Game {
   }
 
   public void figure2_3(int runs, int time) {
-    var bandits = new Bandit[2];
+    var bandits = new Bandit[3];
     bandits[0] = Bandit.builder().kArms(10).epsilon(0.0).initial(5.0).build();
     bandits[1] = Bandit.builder().kArms(10).epsilon(0.1).initial(0.0).build();
+    bandits[2] = Bandit.builder().kArms(10).epsilon(0.1).initial(5.0).build();
     var results = banditSimulation(runs, time, Arrays.asList(bandits));
     final var bestActionChart = createChart(1000, 500, "Time", "Best action %");
     var timeAxis = IntStream.range(0, time).mapToDouble(t -> t).toArray();
