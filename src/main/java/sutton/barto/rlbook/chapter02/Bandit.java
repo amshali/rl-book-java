@@ -7,8 +7,10 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.IntStream;
 
+import static sutton.barto.rlbook.Utils.vectorOf;
+
 public class Bandit {
-  private final int[] indices;
+  private final Integer[] indices;
   private final Random random = new Random();
   private int kArms = 10;
   /**
@@ -19,7 +21,7 @@ public class Bandit {
   /**
    * Learning parameter for updating estimates.
    */
-  private double stepSize = 0.1;
+  private double alpha = 0.1;
   /**
    * If true, use sample averages to update estimations instead of constant step size.
    */
@@ -52,23 +54,34 @@ public class Bandit {
   private int time = 0;
   private int bestAction = -1;
   private double averageReward = 0.0;
-  public Bandit(int kArms, double epsilon, double initial, double stepSize, boolean sampleAverages,
+  private double[] actionProb;
+
+  public Bandit(int kArms, double epsilon, double initial, double alpha, boolean sampleAverages,
                 Double ucbParam, boolean gradient, boolean gradientBaseline, double trueReward) {
     this.kArms = kArms;
     this.epsilon = epsilon;
     this.initial = initial;
-    this.stepSize = stepSize;
+    this.alpha = alpha;
     this.sampleAverages = sampleAverages;
     this.ucbParam = ucbParam;
     this.gradient = gradient;
     this.gradientBaseline = gradientBaseline;
     this.trueReward = trueReward;
-    indices = IntStream.range(0, kArms).toArray();
+    indices = new Integer[kArms];
+    IntStream.range(0, kArms).forEach(i -> indices[i] = i);
     reset();
   }
 
   public static BanditBuilder builder() {
     return new BanditBuilder();
+  }
+
+  public boolean gradientBaseline() {
+    return gradientBaseline;
+  }
+
+  public double alpha() {
+    return alpha;
   }
 
   public Double ucbParam() {
@@ -104,15 +117,10 @@ public class Bandit {
       return Utils.argmax(ucbEstimation);
     }
     if (gradient) {
-      var qEstExp = Arrays.stream(qEst).map(Math::exp);
-      var sum = qEstExp.sum();
-      var actionProb = qEstExp.map(d -> d / sum).toArray();
-      var rnd = random.nextDouble();
-      for (int i = 0; i < actionProb.length; i++) {
-        if (rnd < actionProb[i]) {
-          return indices[i];
-        }
-      }
+      var qEstExp = Arrays.stream(qEst).map(Math::exp).toArray();
+      var sum = Arrays.stream(qEstExp).sum();
+      actionProb = Arrays.stream(qEstExp).map(d -> d / sum).toArray();
+      return Utils.choice(indices, actionProb);
     }
     // Default to full greedy algorithm:
     return Utils.argmax(qEst);
@@ -128,17 +136,27 @@ public class Bandit {
     var normalDistribution = new NormalDistribution(0, 1);
     double reward = normalDistribution.sample() + qTrue[action];
     time++;
-    averageReward = (time - 1.0) / (time * averageReward) + reward / time;
+    averageReward += (reward - averageReward) / time;
     actionCount[action]++;
     if (sampleAverages) {
       // Sample average method for reward estimation. Better for stationary problems.
       qEst[action] += (reward - qEst[action]) / actionCount[action];
     } else if (gradient) {
-
+      var oneHot = vectorOf(kArms, 0.0);
+      oneHot.set(action, 1.0);
+      var baseLine = 0.0;
+      if (gradientBaseline) {
+        baseLine = averageReward;
+      }
+      final var finalBaseLine = baseLine;
+      qEst = IntStream.range(0, oneHot.size())
+          .mapToDouble(
+              i -> qEst[i] + alpha * (reward - finalBaseLine) * (oneHot.get(i) - actionProb[i]))
+          .toArray();
     } else {
       // Exponential-recency weighted average. Better for non-stationary problems.
       // Update estimation with constant step size:
-      qEst[action] += stepSize * (reward - qEst[action]);
+      qEst[action] += alpha * (reward - qEst[action]);
     }
     return reward;
   }
@@ -166,7 +184,7 @@ public class Bandit {
     private int kArms = 10;
     private double epsilon = 0.0;
     private double initial = 0.0;
-    private double stepSize = 0.1;
+    private double alpha = 0.1;
     private boolean sampleAverages = false;
     private Double ucbParam = null;
     private boolean gradient = false;
@@ -179,7 +197,7 @@ public class Bandit {
     }
 
     public Bandit build() {
-      return new Bandit(kArms, epsilon, initial, stepSize, sampleAverages, ucbParam, gradient,
+      return new Bandit(kArms, epsilon, initial, alpha, sampleAverages, ucbParam, gradient,
           gradientBaseline, trueReward);
     }
 
@@ -195,6 +213,26 @@ public class Bandit {
 
     public BanditBuilder initial(Double initial) {
       this.initial = initial;
+      return this;
+    }
+
+    public BanditBuilder alpha(Double alpha) {
+      this.alpha = alpha;
+      return this;
+    }
+
+    public BanditBuilder gradient(boolean gradient) {
+      this.gradient = gradient;
+      return this;
+    }
+
+    public BanditBuilder gradientBaseline(Boolean gradientBaseline) {
+      this.gradientBaseline = gradientBaseline;
+      return this;
+    }
+
+    public BanditBuilder trueReward(Double trueReward) {
+      this.trueReward = trueReward;
       return this;
     }
 

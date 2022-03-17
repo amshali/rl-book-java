@@ -47,6 +47,10 @@ public class Game {
         figure2_4(2000, 1000);
         break;
       }
+      case "figure2_5": {
+        figure2_5(2000, 1000);
+        break;
+      }
       default: {
         System.err.printf("Invalid flag value: %s\n", fFigure);
         System.exit(-1);
@@ -124,6 +128,36 @@ public class Game {
     });
     var charts = new ArrayList<XYChart>();
     charts.add(rewardsChart);
+    new SwingWrapper<>(charts, 1, 1).displayChartMatrix();
+  }
+
+  public void figure2_5(int runs, int time) {
+    var bandits = new ArrayList<Bandit>();
+    bandits.add(
+        Bandit.builder().gradient(true).gradientBaseline(true).alpha(0.1).trueReward(4.0)
+            .build());
+    bandits.add(
+        Bandit.builder().gradient(true).gradientBaseline(false).alpha(0.1).trueReward(4.0)
+            .build());
+    bandits.add(
+        Bandit.builder().gradient(true).gradientBaseline(true).alpha(0.4).trueReward(4.0)
+            .build());
+    bandits.add(
+        Bandit.builder().gradient(true).gradientBaseline(false).alpha(0.4).trueReward(4.0)
+            .build());
+    var results = banditSimulation(runs, time, bandits);
+    var timeAxis = IntStream.range(0, time).mapToDouble(t -> t).toArray();
+    final var bestActionChart = createChart(1000, 500, "Time", "Best action %");
+    IntStream.range(0, bandits.size()).forEach(i -> {
+      Vector<Double> bActions = results.second().get(i);
+      double[] bestActionChoice = bActions.stream().mapToDouble(d -> d * 100).toArray();
+      bestActionChart.addSeries(
+          "α = %.2f, baseline = %s".formatted(bandits.get(i).alpha(),
+              bandits.get(i).gradientBaseline()),
+          timeAxis, bestActionChoice);
+    });
+    var charts = new ArrayList<XYChart>();
+    charts.add(bestActionChart);
     new SwingWrapper<>(charts, 1, 1).displayChartMatrix();
   }
 

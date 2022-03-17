@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Utils {
+  private static Random random = new Random();
+
   public static int argmax(double[] a) {
     var max = Double.NEGATIVE_INFINITY;
     int maxIndex = -1;
@@ -51,7 +53,7 @@ public class Utils {
         break;
       }
       results.add(new Vector<>(current));
-     }
+    }
     return results;
   }
 
@@ -65,6 +67,18 @@ public class Utils {
     var v = new Vector<T>(size);
     IntStream.range(0, size).forEach(i -> v.add(init));
     return v;
+  }
+
+  public static <T> T choice(T[] data, double[] probabilities) {
+    var rnd = random.nextDouble();
+    var sumProb = 0.0;
+    for (int i = 0; i < data.length; i++) {
+      sumProb += probabilities[i];
+      if (rnd <= sumProb) {
+        return data[i];
+      }
+    }
+    return null;
   }
 
   public static void main(String[] args) {
