@@ -52,7 +52,6 @@ public class Bandit {
   private int time = 0;
   private int bestAction = -1;
   private double averageReward = 0.0;
-
   public Bandit(int kArms, double epsilon, double initial, double stepSize, boolean sampleAverages,
                 Double ucbParam, boolean gradient, boolean gradientBaseline, double trueReward) {
     this.kArms = kArms;
@@ -72,6 +71,10 @@ public class Bandit {
     return new BanditBuilder();
   }
 
+  public Double ucbParam() {
+    return ucbParam;
+  }
+
   public double epsilon() {
     return epsilon;
   }
@@ -88,7 +91,17 @@ public class Bandit {
       }
     }
     if (ucbParam != null) {
-      // TODO: Implement!
+      // UCB is a little counter-intuitive at first, because it looks like it is giving a higher
+      // value to the action that is selected, so why are we uncertain about that? The idea is that
+      // we give it a high value so that it is selected next time and so that we can examine the
+      // reward it produces until we are certain whether it is good or not.
+      var timeLog = Math.log(time + 1);
+      var uncertainties =
+          Arrays.stream(actionCount).mapToDouble(d -> ucbParam * Math.sqrt(timeLog / (d + 1e-5)))
+              .toArray();
+      var ucbEstimation =
+          IntStream.range(0, qEst.length).mapToDouble(i -> qEst[i] + uncertainties[i]).toArray();
+      return Utils.argmax(ucbEstimation);
     }
     if (gradient) {
       var qEstExp = Arrays.stream(qEst).map(Math::exp);
@@ -159,6 +172,11 @@ public class Bandit {
     private boolean gradient = false;
     private boolean gradientBaseline = false;
     private double trueReward = 0.0;
+
+    public BanditBuilder ucbParam(Double ucbParam) {
+      this.ucbParam = ucbParam;
+      return this;
+    }
 
     public Bandit build() {
       return new Bandit(kArms, epsilon, initial, stepSize, sampleAverages, ucbParam, gradient,

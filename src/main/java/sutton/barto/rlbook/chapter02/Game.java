@@ -43,6 +43,10 @@ public class Game {
         figure2_3(2000, 1000);
         break;
       }
+      case "figure2_4": {
+        figure2_4(2000, 1000);
+        break;
+      }
       default: {
         System.err.printf("Invalid flag value: %s\n", fFigure);
         System.exit(-1);
@@ -101,6 +105,25 @@ public class Game {
     });
     var charts = new ArrayList<XYChart>();
     charts.add(bestActionChart);
+    new SwingWrapper<>(charts, 1, 1).displayChartMatrix();
+  }
+
+  public void figure2_4(int runs, int time) {
+    var bandits = new ArrayList<Bandit>();
+    bandits.add(Bandit.builder().kArms(10).epsilon(0.0).sampleAverages(true).ucbParam(2.0).build());
+    bandits.add(Bandit.builder().kArms(10).epsilon(0.1).sampleAverages(true).build());
+    var results = banditSimulation(runs, time, bandits);
+    final var rewardsChart = createChart(1000, 500, "Time", "Reward");
+    var timeAxis = IntStream.range(0, time).mapToDouble(t -> t).toArray();
+    IntStream.range(0, bandits.size()).forEach(i -> {
+      var bRewards = results.first().get(i);
+      double[] rewards = bRewards.stream().mapToDouble(d -> d).toArray();
+      rewardsChart.addSeries(
+          "ε = %.2f, UCB = %.2f".formatted(bandits.get(i).epsilon(), bandits.get(i).ucbParam()),
+          timeAxis, rewards);
+    });
+    var charts = new ArrayList<XYChart>();
+    charts.add(rewardsChart);
     new SwingWrapper<>(charts, 1, 1).displayChartMatrix();
   }
 
