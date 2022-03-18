@@ -3,6 +3,7 @@ package sutton.barto.rlbook.chapter01.tictactoe;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.validators.PositiveInteger;
+import me.tongfei.progressbar.ProgressBar;
 import sutton.barto.rlbook.ConsoleColors;
 
 import java.io.File;
@@ -92,8 +93,8 @@ public class Game {
     double player1Wins = 0;
     double player2Wins = 0;
     double ties = 0;
+    var pb = new ProgressBar("Training", epochs);
     for (int i = 0; i < epochs; i++) {
-      System.out.printf("Epoch %d\n", i);
       int winner = judge.play(false);
       if (winner == Game.P1_SYMBOL) {
         player1Wins++;
@@ -103,7 +104,9 @@ public class Game {
         ties++;
       }
       judge.reset();
+      pb.step();
     }
+    pb.close();
     System.out.printf("Player 1 wins: %.2f\n", player1Wins / epochs);
     System.out.printf("Player 2 wins: %.2f\n", player2Wins / epochs);
     System.out.printf("Ties: %.2f\n", ties / epochs);
@@ -120,8 +123,8 @@ public class Game {
     double player1Wins = 0;
     double player2Wins = 0;
     double ties = 0;
+    var pb = new ProgressBar("Competing", turns);
     for (int i = 0; i < turns; i++) {
-      System.out.printf("Turn %d\n", i);
       int winner = judge.play(false);
       if (winner == P1_SYMBOL) {
         player1Wins++;
@@ -131,7 +134,9 @@ public class Game {
         ties++;
       }
       judge.reset();
+      pb.step();
     }
+    pb.close();
     System.out.printf("Player 1 wins: %.2f\n", player1Wins / turns);
     System.out.printf("Player 2 wins: %.2f\n", player2Wins / turns);
     System.out.printf("Ties: %.2f\n", ties / turns);
