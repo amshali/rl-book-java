@@ -69,16 +69,22 @@ public class Utils {
     return v;
   }
 
-  public static <T> T choice(T[] data, double[] probabilities) {
+  /**
+   * Make a random choice from the given the probabilities.
+   *
+   * @param probabilities array of probabilities. The sum of values in this array must be 1.
+   * @return the index of the chosen item.
+   */
+  public static int choice(double[] probabilities) {
     var rnd = random.nextDouble();
     var sumProb = 0.0;
-    for (int i = 0; i < data.length; i++) {
+    for (int i = 0; i < probabilities.length; i++) {
       sumProb += probabilities[i];
       if (rnd <= sumProb) {
-        return data[i];
+        return i;
       }
     }
-    return null;
+    throw new RuntimeException("Could not choose a value with given probabilities.");
   }
 
   public static void main(String[] args) {

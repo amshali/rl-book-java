@@ -36,6 +36,10 @@ public class Bandit {
   private boolean gradient = false;
   /**
    * If true, use average reward as baseline for gradient based bandit algorithm.
+   * The baseline is the term with which the reward is compared. If the reward is higher
+   * than the baseline, then the probability of taking action A in the future is increased,
+   * and if the reward is below baseline, then the probability is decreased.
+   * The non-selected actions move in the opposite direction.
    */
   private boolean gradientBaseline = false;
   private double trueReward = 0.0;
@@ -120,7 +124,8 @@ public class Bandit {
       var qEstExp = Arrays.stream(qEst).map(Math::exp).toArray();
       var sum = Arrays.stream(qEstExp).sum();
       actionProb = Arrays.stream(qEstExp).map(d -> d / sum).toArray();
-      return Utils.choice(indices, actionProb);
+      int randomChoice = Utils.choice(actionProb);
+      return indices[randomChoice];
     }
     // Default to full greedy algorithm:
     return Utils.argmax(qEst);
