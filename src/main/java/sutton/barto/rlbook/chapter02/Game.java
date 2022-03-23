@@ -44,27 +44,12 @@ public class Game {
 
   public void run() {
     switch (fFigure) {
-      case "figure2_2": {
-        figure2_2(fRuns, fSteps);
-        break;
-      }
-      case "figure2_3": {
-        figure2_3(fRuns, fSteps);
-        break;
-      }
-      case "figure2_4": {
-        figure2_4(fRuns, fSteps);
-        break;
-      }
-      case "figure2_5": {
-        figure2_5(fRuns, fSteps);
-        break;
-      }
-      case "figure2_6": {
-        figure2_6(fRuns, fSteps);
-        break;
-      }
-      default: {
+      case "figure2_2" -> figure2_2(fRuns, fSteps);
+      case "figure2_3" -> figure2_3(fRuns, fSteps);
+      case "figure2_4" -> figure2_4(fRuns, fSteps);
+      case "figure2_5" -> figure2_5(fRuns, fSteps);
+      case "figure2_6" -> figure2_6(fRuns, fSteps);
+      default -> {
         System.err.printf("Invalid flag value: %s\n", fFigure);
         System.exit(-1);
       }
