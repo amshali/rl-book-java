@@ -1,6 +1,7 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
 import sutton.barto.rlbook.ConsoleColors;
+import sutton.barto.rlbook.Position;
 
 import java.util.ArrayList;
 import java.util.Arrays;

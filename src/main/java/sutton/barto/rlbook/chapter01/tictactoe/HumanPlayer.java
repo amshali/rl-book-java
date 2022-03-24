@@ -1,5 +1,7 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
+import sutton.barto.rlbook.Position;
+
 import java.io.File;
 import java.util.Scanner;
 

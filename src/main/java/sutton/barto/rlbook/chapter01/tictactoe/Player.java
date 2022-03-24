@@ -1,5 +1,6 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
+import sutton.barto.rlbook.Position;
 import sutton.barto.rlbook.Tuple;
 
 import java.io.*;

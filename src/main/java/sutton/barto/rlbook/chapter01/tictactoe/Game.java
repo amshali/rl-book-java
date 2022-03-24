@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.validators.PositiveInteger;
 import me.tongfei.progressbar.ProgressBar;
 import sutton.barto.rlbook.ConsoleColors;
+import sutton.barto.rlbook.Position;
 
 import java.io.File;
 import java.io.IOException;

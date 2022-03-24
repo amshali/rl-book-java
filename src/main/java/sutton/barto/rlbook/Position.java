@@ -1,4 +1,4 @@
-package sutton.barto.rlbook.chapter01.tictactoe;
+package sutton.barto.rlbook;
 
 /**
  * A position on the X-O board.
