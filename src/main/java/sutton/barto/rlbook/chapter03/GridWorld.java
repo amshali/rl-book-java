@@ -3,10 +3,7 @@ package sutton.barto.rlbook.chapter03;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import j2html.tags.DomContent;
-import org.apache.commons.math3.linear.DefaultRealMatrixPreservingVisitor;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealMatrixPreservingVisitor;
+import org.apache.commons.math3.linear.*;
 import sutton.barto.rlbook.Matrix;
 import sutton.barto.rlbook.Position;
 import sutton.barto.rlbook.Utils;
@@ -112,6 +109,46 @@ public class GridWorld {
     return null;
   }
 
+  private DomContent figure3_2LinearAlgebra() throws IOException {
+    RealMatrix result = computeStateValueUsingLinearAlgebra();
+    return GridWorldDraw.drawMatrix(result, "Figure 3.2 - State-Value function using linear " +
+        "system");
+  }
+
+  private RealMatrix computeStateValueUsingLinearAlgebra() {
+    var coefficients = MatrixUtils.createRealMatrix(WORLD_SIZE * WORLD_SIZE,
+        WORLD_SIZE * WORLD_SIZE);
+    var constants = new ArrayRealVector(WORLD_SIZE * WORLD_SIZE);
+    for (int i = 0; i < WORLD_SIZE * WORLD_SIZE; i++) {
+      coefficients.setEntry(i, i, -1.0);
+      constants.setEntry(i, 0.0);
+    }
+    for (int i = 0; i < WORLD_SIZE; i++) {
+      for (int j = 0; j < WORLD_SIZE; j++) {
+        var state = new Position(i, j);
+        var stateIndex = i * WORLD_SIZE + j;
+        for (var action : ACTIONS) {
+          Map<String, Object> result = step(state, action);
+          var nextState = (Position) result.get("next_state");
+          var reward = (Double) result.get("reward");
+          var nextStateIndex = nextState.row() * WORLD_SIZE + nextState.column();
+          coefficients.setEntry(stateIndex, nextStateIndex,
+              coefficients.getEntry(stateIndex, nextStateIndex) + ACTION_PROB * discountRate);
+          constants.setEntry(stateIndex, constants.getEntry(stateIndex) - ACTION_PROB * reward);
+        }
+      }
+    }
+    DecompositionSolver solver = new LUDecomposition(coefficients).getSolver();
+    RealVector solution = solver.solve(constants);
+    var out = MatrixUtils.createRealMatrix(WORLD_SIZE, WORLD_SIZE);
+    for (int i = 0; i < WORLD_SIZE; i++) {
+      for (int j = 0; j < WORLD_SIZE; j++) {
+        out.setEntry(i, j, solution.getEntry(i * WORLD_SIZE + j));
+      }
+    }
+    return out;
+  }
+
   private Map<String, Object> computeOptimalPolicyAndValue() {
     var value = Utils.zeros(WORLD_SIZE, WORLD_SIZE);
     var policy = new Matrix<Vector<Character>>(WORLD_SIZE, WORLD_SIZE, new Vector<>());
@@ -164,9 +201,11 @@ public class GridWorld {
 
   public void run() {
     try {
+      computeStateValueUsingLinearAlgebra();
       var f1 = figure3_2();
-      var f2 = figure3_5();
-      GridWorldDraw.generateHtml(new File(outputFile), div(f1), div(f2));
+      var f2 = figure3_2LinearAlgebra();
+      var f3 = figure3_5();
+      GridWorldDraw.generateHtml(new File(outputFile), table(tr(td(f1), td(f2))), div(f3));
     } catch (IOException e) {
       e.printStackTrace();
     }
