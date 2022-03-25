@@ -1,40 +1,43 @@
 package sutton.barto.rlbook;
 
-import java.util.Vector;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Matrix<T> {
 
-  private int rows, columns;
-  private Vector<Vector<T>> data;
+  private final int rows;
+  private final int columns;
+  private final T[][] data;
 
+  @SuppressWarnings("unchecked")
   public Matrix(int rows, int columns, T init) {
     this.rows = rows;
     this.columns = columns;
-    data = new Vector<>();
+    data = (T[][]) new Object[rows][];
     for (int i = 0; i < rows; i++) {
-      data.addElement(new Vector<>());
+      data[i] = (T[]) new Object[columns];
       for (int j = 0; j < columns; j++) {
-        data.get(i).addElement(init);
+        data[i][j] = init;
       }
     }
   }
 
+  @SuppressWarnings("unchecked")
   public Matrix(Matrix<T> o) {
     this.rows = o.rows;
     this.columns = o.columns;
-    data = new Vector<>();
+    data = (T[][]) new Object[rows][];
     for (int i = 0; i < rows; i++) {
-      data.addElement(new Vector<>());
+      data[i] = (T[]) new Object[columns];
       for (int j = 0; j < columns; j++) {
-        data.get(i).addElement(o.get(i, j));
+        data[i][j] = o.get(i, j);
       }
     }
   }
 
   public Stream<T> row(int i) {
-    return data.get(i).stream();
+    return Arrays.stream(data[i]);
   }
 
   public Stream<T> column(int c) {
@@ -42,13 +45,11 @@ public class Matrix<T> {
   }
 
   public T get(int i, int j) {
-    return data.get(i).get(j);
+    return data[i][j];
   }
 
-  public T set(int i, int j, T d) {
-    var current = data.get(i).get(j);
-    data.get(i).set(j, d);
-    return current;
+  public void set(int i, int j, T d) {
+    data[i][j] = d;
   }
 
   public int rows() {

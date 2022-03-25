@@ -32,7 +32,7 @@ public class State {
         results.add(board.row(i).reduce(0, Integer::sum));
       }
       for (int i = 0; i < Game.BOARD_COLS; i++) {
-        results.add(board.column(i).reduce(9, Integer::sum));
+        results.add(board.column(i).reduce(0, Integer::sum));
       }
       results.add(IntStream.range(0, Game.BOARD_ROWS).map(i -> board.get(i, i)).sum());
       results.add(
