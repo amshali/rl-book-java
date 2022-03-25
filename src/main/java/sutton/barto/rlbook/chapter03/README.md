@@ -7,7 +7,8 @@
 mvn clean compile package
 
 # Run:
-java -cp target/Sutton-Barto-RLBook-1.0-jar-with-dependencies.jar sutton.barto.rlbook.chapter03.GridWorld -o /tmp/chapter03.html
+java -cp target/Sutton-Barto-RLBook-1.0-jar-with-dependencies.jar \
+  sutton.barto.rlbook.chapter03.GridWorld -o /tmp/chapter03.html
 
 # Output is an HTML page.
 open /tmp/chapter03.html
