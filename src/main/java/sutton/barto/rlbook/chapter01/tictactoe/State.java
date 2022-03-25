@@ -1,16 +1,16 @@
 package sutton.barto.rlbook.chapter01.tictactoe;
 
 import sutton.barto.rlbook.ConsoleColors;
+import sutton.barto.rlbook.Matrix;
 import sutton.barto.rlbook.Position;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
 public class State {
 
-  private final int[][] board = new int[Game.BOARD_ROWS][Game.BOARD_COLS];
+  private Matrix<Integer> board = new Matrix<>(Game.BOARD_ROWS, Game.BOARD_COLS, 0);
   private int winner = 0;
   private Long hash = null;
   private Boolean end = null;
@@ -18,9 +18,6 @@ public class State {
   private Integer justPlayedSymbol;
 
   private State() {
-    for (int i = 0; i < Game.BOARD_ROWS; i++) {
-      Arrays.fill(board[i], 0);
-    }
   }
 
   public static State init() {
@@ -32,15 +29,15 @@ public class State {
       end = false;
       List<Integer> results = new ArrayList<>();
       for (int i = 0; i < Game.BOARD_ROWS; i++) {
-        results.add(Arrays.stream(board[i]).sum());
+        results.add(board.row(i).reduce(0, Integer::sum));
       }
       for (int i = 0; i < Game.BOARD_COLS; i++) {
-        int finalI = i;
-        results.add(IntStream.range(0, Game.BOARD_ROWS).map(j -> board[j][finalI]).sum());
+        results.add(board.column(i).reduce(9, Integer::sum));
       }
-      results.add(IntStream.range(0, Game.BOARD_ROWS).map(i -> board[i][i]).sum());
+      results.add(IntStream.range(0, Game.BOARD_ROWS).map(i -> board.get(i, i)).sum());
       results.add(
-          IntStream.range(0, Game.BOARD_ROWS).map(i -> board[i][Game.BOARD_ROWS - 1 - i]).sum());
+          IntStream.range(0, Game.BOARD_ROWS).map(i -> board.get(i, Game.BOARD_ROWS - 1 - i))
+              .sum());
       for (int result : results) {
         if (result == 3) {
           winner = Game.P1_SYMBOL;
@@ -57,7 +54,7 @@ public class State {
       int sum = 0;
       for (int i = 0; i < Game.BOARD_ROWS; i++) {
         for (int j = 0; j < Game.BOARD_COLS; j++) {
-          sum += Math.abs(board[i][j]);
+          sum += Math.abs(board.get(i, j));
         }
       }
       if (sum == Game.BOARD_COLS * Game.BOARD_ROWS) {
@@ -73,15 +70,15 @@ public class State {
       System.out.println("-------------");
       StringBuilder sb = new StringBuilder("| ");
       for (int j = 0; j < Game.BOARD_COLS; j++) {
-        if (board[i][j] == Game.P1_SYMBOL) {
+        if (board.get(i, j) == Game.P1_SYMBOL) {
           sb.append("O");
         }
-        if (board[i][j] == 0) {
+        if (board.get(i, j) == 0) {
           sb.append(ConsoleColors.GREEN_UNDERLINED);
           sb.append(i * 3 + j + 1);
           sb.append(ConsoleColors.RESET);
         }
-        if (board[i][j] == Game.P2_SYMBOL) {
+        if (board.get(i, j) == Game.P2_SYMBOL) {
           sb.append("X");
         }
         sb.append(" | ");
@@ -103,10 +100,10 @@ public class State {
       long h = 0L;
       for (int i = 0; i < Game.BOARD_ROWS; i++) {
         for (int j = 0; j < Game.BOARD_COLS; j++) {
-          if (board[i][j] == Game.P2_SYMBOL) {
+          if (board.get(i, j) == Game.P2_SYMBOL) {
             h = h * 3 + 2;
           } else {
-            h = h * 3 + board[i][j];
+            h = h * 3 + board.get(i, j);
           }
         }
       }
@@ -116,17 +113,15 @@ public class State {
   }
 
   public int data(Position p) {
-    return board[p.row()][p.column()];
+    return board.get(p.row(), p.column());
   }
 
   public State nextState(Position p, int symbol) {
     State ns = new State();
     ns.init = false;
     ns.justPlayedSymbol = symbol;
-    for (int i = 0; i < board.length; i++) {
-      ns.board[i] = Arrays.copyOf(board[i], board[i].length);
-    }
-    ns.board[p.row()][p.column()] = symbol;
+    ns.board = new Matrix<>(board);
+    ns.board.set(p.row(), p.column(), symbol);
     return ns;
   }
 }
