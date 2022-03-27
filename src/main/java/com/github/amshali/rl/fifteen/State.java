@@ -14,11 +14,9 @@ public class State {
   private final String hash;
   private boolean isTerminal;
   private int nilIndex;
-  private Double value;
+  private Double value = 1.0;
 
   public State(int[] numbers) {
-    var random = new Random();
-    value = random.nextDouble();
     this.numbers = numbers;
     isTerminal = true;
     for (int i = 0; i < this.numbers.length; i++) {

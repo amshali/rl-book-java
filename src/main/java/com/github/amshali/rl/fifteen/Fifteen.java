@@ -6,11 +6,9 @@ import com.beust.jcommander.validators.PositiveInteger;
 import me.tongfei.progressbar.ProgressBar;
 import sutton.barto.rlbook.Utils;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.IntStream;
@@ -19,6 +17,7 @@ public class Fifteen {
 
   private final Map<String, State> states = new ConcurrentHashMap<>(1_000_000);
   private final Map<String, Integer> policy = new ConcurrentHashMap<>(1_000_000);
+  private final Random random = new Random();
   @Parameter(names = {"--init-random", "-ir"}, validateWith = PositiveInteger.class,
       description = "Number of initial random state")
   Integer fInitRandomState = 1_000_000;
@@ -26,8 +25,6 @@ public class Fifteen {
   Double fDiscountRate = 0.9;
   @Parameter(names = {"--theta", "-th", "--threshold"})
   Double fTheta = 0.1;
-
-  private Random random = new Random();
 
   public static void main(String[] args) throws InterruptedException {
     var fifteen = new Fifteen();
@@ -39,9 +36,15 @@ public class Fifteen {
   }
 
   private void run() throws InterruptedException {
-    initValues();
-    calculateOptimalValues();
-    calculateOptimalPolicy();
+    init();
+    var stable = false;
+    var epoch = 0;
+    while (!stable) {
+      epoch++;
+      System.out.printf("Epoch %d\n", epoch);
+      calculateOptimalValues();
+      stable = calculateOptimalPolicy();
+    }
     System.out.println("Done!");
     State s = State.randomState();
     int t = 0;
@@ -88,11 +91,8 @@ public class Fifteen {
   }
 
   public void calculateOptimalValues() {
-    var epoch = 0;
     while (true) {
       final var delta = new AtomicReference<>(0.0);
-      epoch++;
-      System.out.printf("Epoch %d\n", epoch);
       var pb = new ProgressBar("Optimal values", states.keySet().size());
       states.keySet().forEach(h -> {
         var s = states.get(h);
@@ -100,11 +100,9 @@ public class Fifteen {
           pb.step();
           return;
         }
-        double maxValue =
-            s.possibleActions().stream().mapToDouble(this.actionValue(s)).max().orElse(0.0);
         var oldValue = s.value();
-        s.setValue(maxValue);
-        var localDelta = Math.abs(oldValue - maxValue);
+        s.setValue(this.actionValue(s).applyAsDouble(policy.get(h)));
+        var localDelta = Math.abs(oldValue - s.value());
         synchronized (delta) {
           delta.set(Math.max(delta.get(), localDelta));
         }
@@ -118,7 +116,8 @@ public class Fifteen {
     }
   }
 
-  public void calculateOptimalPolicy() {
+  public boolean calculateOptimalPolicy() {
+    AtomicBoolean policyStable = new AtomicBoolean(true);
     var pb = new ProgressBar("Optimal π", states.keySet().size());
     states.keySet().forEach(h -> {
       var s = states.get(h);
@@ -126,12 +125,17 @@ public class Fifteen {
         pb.step();
         return;
       }
+      var oldAction = policy.get(h);
       var possibleActions = s.possibleActions();
       var actionValues = possibleActions.stream().mapToDouble(this.actionValue(s)).toArray();
-      policy.put(s.hash(), possibleActions.get(Utils.argmax(actionValues)));
+      policy.put(h, possibleActions.get(Utils.argmax(actionValues)));
+      if (!Objects.equals(policy.get(h), oldAction)) {
+        policyStable.set(false);
+      }
       pb.step();
     });
     pb.close();
+    return policyStable.get();
   }
 
   public Double reward(State s) {
@@ -141,13 +145,17 @@ public class Fifteen {
     return -0.1;
   }
 
-  private void initValues() {
-    states.put(State.TERMINAL.hash(), State.TERMINAL);
+  private void init() {
     var ints = IntStream.range(1, State.NUM_CELLS + 1).boxed().toArray(Integer[]::new);
     var perms = Utils.getPermutationsRecursive(ints);
     perms.forEach(p -> {
       var s = new State(Arrays.stream(p).mapToInt(Integer::intValue).toArray());
       states.putIfAbsent(s.hash(), s);
+      if (!s.isTerminal()) {
+        s.setValue(random.nextDouble());
+        var possibleActions = s.possibleActions();
+        policy.put(s.hash(), possibleActions.get(random.nextInt(possibleActions.size())));
+      }
     });
   }
 }

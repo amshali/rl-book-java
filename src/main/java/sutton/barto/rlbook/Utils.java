@@ -7,16 +7,13 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Utils {
-  private static Random random = new Random();
+  private static final Random random = new Random();
 
   public static int argmax(double[] a) {
     var max = Double.NEGATIVE_INFINITY;
     int maxIndex = -1;
     for (int i = 0; i < a.length; i++) {
       if (a[i] > max) {
-        maxIndex = i;
-        max = a[i];
-      } else if (a[i] == max && random.nextBoolean()) {
         maxIndex = i;
         max = a[i];
       }
