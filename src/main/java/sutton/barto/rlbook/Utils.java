@@ -16,6 +16,9 @@ public class Utils {
       if (a[i] > max) {
         maxIndex = i;
         max = a[i];
+      } else if (a[i] == max && random.nextBoolean()) {
+        maxIndex = i;
+        max = a[i];
       }
     }
     return maxIndex;
