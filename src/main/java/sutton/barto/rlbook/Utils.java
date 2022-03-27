@@ -36,6 +36,35 @@ public class Utils {
     return minIndex;
   }
 
+  public static Set<Integer[]> getPermutationsRecursive(Integer[] num) {
+    if (num == null) {
+      return null;
+    }
+
+    Set<Integer[]> perms = new HashSet<>();
+
+    if (num.length == 0) {
+      perms.add(new Integer[0]);
+      return perms;
+    }
+
+    int first = num[0];
+    Integer[] remainder = Arrays.copyOfRange(num, 1, num.length);
+    Set<Integer[]> subPerms = getPermutationsRecursive(remainder);
+    for (Integer[] subPerm : subPerms) {
+      for (int i = 0; i <= subPerm.length; ++i) { // '<='   IMPORTANT !!!
+        Integer[] newPerm = Arrays.copyOf(subPerm, subPerm.length + 1);
+        for (int j = newPerm.length - 1; j > i; --j) {
+          newPerm[j] = newPerm[j - 1];
+        }
+        newPerm[i] = first;
+        perms.add(newPerm);
+      }
+    }
+
+    return perms;
+  }
+
   public static List<Vector<Integer>> permutations(Vector<Integer> dims) {
     var current = new Vector<Integer>(dims.size());
     dims.forEach(d -> {
@@ -104,11 +133,9 @@ public class Utils {
   }
 
   public static void main(String[] args) {
-    var dims = new Vector<Integer>();
-    dims.add(3);
-    dims.add(4);
-    dims.add(3);
-    var perms = permutations(dims);
-    perms.forEach(System.out::println);
+    var perms = getPermutationsRecursive(new Integer[]{1, 2, 3, 4, 5});
+    perms.forEach(p -> {
+      System.out.println(Arrays.toString(p));
+    });
   }
 }
