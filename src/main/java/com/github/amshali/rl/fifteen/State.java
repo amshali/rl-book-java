@@ -1,14 +1,14 @@
 package com.github.amshali.rl.fifteen;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import sutton.barto.rlbook.Position;
+
+import java.util.*;
 
 public class State {
   public static final int NUM_CELLS = 9;
   public static final int NIL_VALUE = 9;
   public static final State TERMINAL = terminalState();
+  public final Map<Integer, String> actionState = new HashMap<>();
   private final int[] numbers;
   private final List<Integer> possibleActions = new ArrayList<>();
   private final String hash;
@@ -48,27 +48,39 @@ public class State {
     }
   }
 
-  public static State randomState() {
-    var ints = new int[NUM_CELLS];
-    for (int i = 0; i < NUM_CELLS; i++) {
-      ints[i] = i + 1;
-    }
-    var random = new Random();
-    for (int i = 0; i < NUM_CELLS; i++) {
-      var randomIndex = random.nextInt(NUM_CELLS);
-      var t = ints[i];
-      ints[i] = ints[randomIndex];
-      ints[randomIndex] = t;
-    }
-    return new State(ints);
-  }
-
   private static State terminalState() {
     var ints = new int[NUM_CELLS];
     for (int i = 0; i < NUM_CELLS; i++) {
       ints[i] = i + 1;
     }
     return new State(ints);
+  }
+
+  public static State nextState(State s, int action) {
+    if (!s.possibleActions().contains(action)) {
+      throw new RuntimeException("Invalid action: " + action + " in state: " + s);
+    }
+    int[] ints = s.cloneNumbers();
+    var actionCell = ints[action];
+    ints[action] = State.NIL_VALUE;
+    ints[s.nilIndex()] = actionCell;
+    return new State(ints);
+  }
+
+  private Position pointOf(int i) {
+    int x = i / NUM_CELLS;
+    int y = i % NUM_CELLS;
+    return new Position(x, y);
+  }
+
+  public Double dist() {
+    var dist = 1.0;
+    for (int i = 0; i < NUM_CELLS; i++) {
+      var iP = pointOf(i);
+      var nP = pointOf(numbers[i] - 1);
+      dist += Math.abs(iP.row() - nP.row()) + Math.abs(iP.column() - nP.column());
+    }
+    return Math.log(dist);
   }
 
   public int nilIndex() {

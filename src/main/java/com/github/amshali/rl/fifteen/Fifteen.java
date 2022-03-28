@@ -2,25 +2,20 @@ package com.github.amshali.rl.fifteen;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.validators.PositiveInteger;
 import me.tongfei.progressbar.ProgressBar;
 import sutton.barto.rlbook.Utils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.ToDoubleFunction;
-import java.util.stream.IntStream;
 
 public class Fifteen {
 
   private final Map<String, State> states = new ConcurrentHashMap<>(1_000_000);
   private final Map<String, Integer> policy = new ConcurrentHashMap<>(1_000_000);
   private final Random random = new Random();
-  @Parameter(names = {"--init-random", "-ir"}, validateWith = PositiveInteger.class,
-      description = "Number of initial random state")
-  Integer fInitRandomState = 1_000_000;
   @Parameter(names = {"--gamma", "-g", "--discount-rate"}, description = "Discount rate.")
   Double fDiscountRate = 0.9;
   @Parameter(names = {"--theta", "-th", "--threshold"})
@@ -37,16 +32,31 @@ public class Fifteen {
 
   private void run() throws InterruptedException {
     init();
-    var stable = false;
-    var epoch = 0;
-    while (!stable) {
-      epoch++;
-      System.out.printf("Epoch %d\n", epoch);
-      calculateOptimalValues();
-      stable = calculateOptimalPolicy();
-    }
+    calculateOptimalValues();
+    calculateOptimalPolicy();
     System.out.println("Done!");
-    State s = State.randomState();
+    var allWorse = new ArrayList<State>();
+    states.keySet().parallelStream().forEach(h -> {
+      var s = states.get(h);
+      if (s.isTerminal()) {
+        return;
+      }
+      int worse = 0;
+      for (var a : s.actionState.keySet()) {
+        var next = states.get(s.actionState.get(a));
+        if (s.value() > next.value() && !next.isTerminal()) {
+          worse++;
+        }
+      }
+      if (worse == s.actionState.size()) {
+        allWorse.add(s);
+        System.out.println(s);
+        System.out.println("^^^^^^^^^^^^^");
+      }
+    });
+    System.out.println("#of states with no better next state = " + allWorse.size());
+    var allStates = states.values().toArray(State[]::new);
+    State s = allStates[random.nextInt(allStates.length)];
     int t = 0;
     final Scanner input = new Scanner(System.in);
     while (true) {
@@ -61,7 +71,7 @@ public class Fifteen {
           break;
         }
         t = 0;
-        s = State.randomState();
+        s = allStates[random.nextInt(allStates.length)];
         continue;
       }
       t++;
@@ -71,37 +81,32 @@ public class Fifteen {
   }
 
   private State nextState(State s, int action) {
-    if (!s.possibleActions().contains(action)) {
-      throw new RuntimeException("Invalid action: " + action + " in state: " + s);
-    }
-    int[] ints = s.cloneNumbers();
-    var actionCell = ints[action];
-    ints[action] = State.NIL_VALUE;
-    ints[s.nilIndex()] = actionCell;
-    var next = new State(ints);
-    states.putIfAbsent(next.hash(), next);
+    var next = State.nextState(s, action);
     return states.get(next.hash());
   }
 
   private ToDoubleFunction<Integer> actionValue(State s) {
     return (Integer action) -> {
-      var sPrime = nextState(s, action);
-      return reward(sPrime) + fDiscountRate * sPrime.value();
+      var nextState = nextState(s, action);
+      return reward(nextState) + fDiscountRate * nextState.value();
     };
   }
 
   public void calculateOptimalValues() {
+    var epoch = 0;
     while (true) {
+      epoch++;
+      System.out.printf("Epoch %d\n", epoch);
       final var delta = new AtomicReference<>(0.0);
-      var pb = new ProgressBar("Optimal values", states.keySet().size());
-      states.keySet().forEach(h -> {
+      var pb = new ProgressBar("Optimal V", states.keySet().size());
+      states.keySet().parallelStream().forEach(h -> {
         var s = states.get(h);
         if (s.isTerminal()) {
           pb.step();
           return;
         }
         var oldValue = s.value();
-        s.setValue(this.actionValue(s).applyAsDouble(policy.get(h)));
+        s.setValue(s.possibleActions().stream().mapToDouble(actionValue(s)).max().orElse(0.0));
         var localDelta = Math.abs(oldValue - s.value());
         synchronized (delta) {
           delta.set(Math.max(delta.get(), localDelta));
@@ -109,53 +114,62 @@ public class Fifteen {
         pb.step();
       });
       pb.close();
-      System.out.printf("Δ = %f\n", delta.get());
+      System.out.println("Δ = " + delta.get());
       if (delta.get() < fTheta) {
         break;
       }
     }
   }
 
-  public boolean calculateOptimalPolicy() {
-    AtomicBoolean policyStable = new AtomicBoolean(true);
+  public void calculateOptimalPolicy() {
     var pb = new ProgressBar("Optimal π", states.keySet().size());
-    states.keySet().forEach(h -> {
+    states.keySet().parallelStream().forEach(h -> {
       var s = states.get(h);
       if (s.isTerminal()) {
         pb.step();
         return;
       }
-      var oldAction = policy.get(h);
       var possibleActions = s.possibleActions();
       var actionValues = possibleActions.stream().mapToDouble(this.actionValue(s)).toArray();
-      policy.put(h, possibleActions.get(Utils.argmax(actionValues)));
-      if (!Objects.equals(policy.get(h), oldAction)) {
-        policyStable.set(false);
-      }
+      var bestAction = possibleActions.get(Utils.argmax(actionValues));
+      policy.put(h, bestAction);
       pb.step();
     });
     pb.close();
-    return policyStable.get();
   }
 
-  public Double reward(State s) {
-    if (s.isTerminal()) {
+  public Double reward(State ns) {
+    if (ns.isTerminal()) {
       return 10.0;
     }
-    return -0.1;
+    return -1.0;
   }
 
   private void init() {
-    var ints = IntStream.range(1, State.NUM_CELLS + 1).boxed().toArray(Integer[]::new);
-    var perms = Utils.getPermutationsRecursive(ints);
-    perms.forEach(p -> {
-      var s = new State(Arrays.stream(p).mapToInt(Integer::intValue).toArray());
-      states.putIfAbsent(s.hash(), s);
-      if (!s.isTerminal()) {
-        s.setValue(random.nextDouble());
-        var possibleActions = s.possibleActions();
-        policy.put(s.hash(), possibleActions.get(random.nextInt(possibleActions.size())));
-      }
+    var work = new LinkedBlockingQueue<State>();
+    work.offer(State.TERMINAL);
+    states.putIfAbsent(State.TERMINAL.hash(), State.TERMINAL);
+    var seen = new HashSet<>();
+    seen.add(State.TERMINAL.hash());
+    while (work.size() > 0) {
+      var w = work.poll();
+      w.possibleActions().forEach(a -> {
+        var ns = State.nextState(w, a);
+        if (!seen.contains(ns.hash())) {
+          states.putIfAbsent(ns.hash(), ns);
+          var possibleActions = ns.possibleActions();
+          policy.put(ns.hash(), possibleActions.get(random.nextInt(possibleActions.size())));
+          work.offer(ns);
+          seen.add(ns.hash());
+        }
+      });
+    }
+    states.keySet().parallelStream().forEach(h -> {
+      var s = states.get(h);
+      s.possibleActions().forEach(a -> {
+        var ns = nextState(s, a);
+        s.actionState.put(a, ns.hash());
+      });
     });
   }
 }
