@@ -33,6 +33,7 @@ public class Utils {
     return minIndex;
   }
 
+  @SafeVarargs
   public static <T> Vector<T> vectorOf(T... data) {
     var v = new Vector<T>(data.length);
     Collections.addAll(v, data);
