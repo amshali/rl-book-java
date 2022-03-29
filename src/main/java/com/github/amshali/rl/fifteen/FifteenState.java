@@ -80,10 +80,10 @@ public class FifteenState {
           new Integer[]{1, 2, 3, 4, NIL_VALUE, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
           FifteenPuzzleEpisode.ONE_TO_FOUR);
       case FIVE_TO_EIGHT -> new FifteenState(
-          new Integer[]{-1, -1, -1, -1, 5, 6, 7, 8, NIL_VALUE, -1, -1, -1, -1, -1, -1, -1},
+          new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, NIL_VALUE, -1, -1, -1, -1, -1, -1, -1},
           FifteenPuzzleEpisode.FIVE_TO_EIGHT);
       case NINE_TO_FIFTEEN -> new FifteenState(
-          new Integer[]{-1, -1, -1, -1, -1, -1, -1, -1, 9, 10, 11, 12, 13, 14, 15, NIL_VALUE},
+          new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NIL_VALUE},
           FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
       case ONE_TO_FIFTEEN -> new FifteenState(
           new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NIL_VALUE},
@@ -96,10 +96,8 @@ public class FifteenState {
       case ONE_TO_FOUR -> Utils.join(
           Arrays.stream(mask(numbers, 1, 4)).toArray(), ",");
       case FIVE_TO_EIGHT -> Utils.join(
-          Arrays.stream(mask(numbers, 5, 8)).toArray(), ",");
-      case NINE_TO_FIFTEEN -> Utils.join(
-          Arrays.stream(mask(numbers, 9, 15)).toArray(), ",");
-      case ONE_TO_FIFTEEN -> Utils.join(
+          Arrays.stream(mask(numbers, 1, 8)).toArray(), ",");
+      case NINE_TO_FIFTEEN, ONE_TO_FIFTEEN -> Utils.join(
           Arrays.stream(mask(numbers, 1, 15)).toArray(), ",");
     };
   }
