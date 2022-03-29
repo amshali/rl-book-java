@@ -75,7 +75,7 @@ public class FifteenState {
   }
 
   public static FifteenState terminalStateOf(FifteenPuzzleEpisode episode) {
-    var t = switch (episode) {
+    return switch (episode) {
       case ONE_TO_FOUR -> new FifteenState(
           new Integer[]{1, 2, 3, 4, NIL_VALUE, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
           FifteenPuzzleEpisode.ONE_TO_FOUR);
@@ -89,7 +89,6 @@ public class FifteenState {
           new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NIL_VALUE},
           FifteenPuzzleEpisode.ONE_TO_FIFTEEN);
     };
-    return t;
   }
 
   public static String generateHash(Integer[] numbers, FifteenPuzzleEpisode episode) {
@@ -115,7 +114,7 @@ public class FifteenState {
       a = a.nextState(action);
       try {
         Thread.sleep(100);
-      } catch (InterruptedException e) {
+      } catch (InterruptedException ignored) {
       }
     }
   }
@@ -143,10 +142,6 @@ public class FifteenState {
     return hash;
   }
 
-  public FifteenPuzzleEpisode episode() {
-    return episode;
-  }
-
   public boolean isTerminal() {
     for (var s : terminalStates.values()) {
       if (s.hash.equals(hash)) {
@@ -169,10 +164,6 @@ public class FifteenState {
       throw new RuntimeException("Cannot set value for terminal state.");
     }
     this.value = value;
-  }
-
-  public int nilIndex() {
-    return nilIndex;
   }
 
   @Override
