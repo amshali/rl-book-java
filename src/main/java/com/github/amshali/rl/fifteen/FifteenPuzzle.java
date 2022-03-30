@@ -2,17 +2,17 @@ package com.github.amshali.rl.fifteen;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.validators.PositiveInteger;
 import me.tongfei.progressbar.ProgressBar;
 import sutton.barto.rlbook.Utils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.ToDoubleFunction;
+import java.util.stream.IntStream;
 
 public class FifteenPuzzle {
   private final Map<String, FifteenState> states =
@@ -23,6 +23,13 @@ public class FifteenPuzzle {
   Double fDiscountRate = 0.9;
   @Parameter(names = {"--theta", "-th", "--threshold"})
   Double fTheta = 0.1;
+  @Parameter(names = {"--trials", "-tr"}, validateWith = PositiveInteger.class)
+  Integer fTrials = 10_000;
+
+  @Parameter(names = {"--play", "-p"})
+  Boolean fPlay = false;
+  @Parameter(names = {"--play-delay", "-pd"}, description = "In milliseconds")
+  Integer fPlayDelay = 1_000;
 
   public static void main(String[] args) {
     var fifteen = new FifteenPuzzle();
@@ -51,12 +58,12 @@ public class FifteenPuzzle {
 
   public Double reward(FifteenState currentState, FifteenState nextState) {
     if (nextState.isSolved()) {
-      return 40.0;
+      return 100.0;
     }
-    if (nextState.rowsSolved() <= 2 && currentState.rowsSolved() <= 2) {
-      return 2.0 * (nextState.rowsSolved() - currentState.rowsSolved());
-    }
-    return -1.0;
+    // Calculate the different between next state and current state's rows solved and reward
+    // based on that. For example, If we go from 2 rows solved to 1 row, the agent will receive a
+    // -1.0 reward.
+    return 1.0 * (nextState.rowsSolved() - currentState.rowsSolved());
   }
 
   public void run() throws InterruptedException {
@@ -69,14 +76,28 @@ public class FifteenPuzzle {
     printBadStates();
     System.out.println("Done!");
 
-    int totalTime = 0;
-    int trials = 10_000;
+    var totalTime = new AtomicInteger(0);
+    var trials = fTrials;
     var pb = new ProgressBar("Solves", trials);
-    for (int i = 0; i < trials; i++) {
-      totalTime += solve(generateRandomState());
+    IntStream.range(0, trials).parallel().forEach(i -> {
+      totalTime.addAndGet(solve(generateRandomState()));
       pb.step();
+    });
+    pb.close();
+    System.out.printf("Average steps per solve = %f\n", (totalTime.get() + 0.0) / trials);
+    System.out.println();
+    if (fPlay) {
+      final Scanner input = new Scanner(System.in);
+      while (true) {
+        play();
+        System.out.println("===========================================");
+        System.out.println("Again? (y/n)");
+        var in = input.next();
+        if (!in.equalsIgnoreCase("y")) {
+          break;
+        }
+      }
     }
-    System.out.printf("Average steps per solve = %f\n", (totalTime + 0.0) / trials);
   }
 
   private int solve(FifteenState currentState) {
@@ -86,6 +107,26 @@ public class FifteenPuzzle {
         return t;
       }
       t++;
+      var action = policy.get(currentState.hash());
+      currentState = currentState.nextState(action);
+    }
+  }
+
+  private void play() {
+    var currentState = generateRandomState();
+    int t = 0;
+    while (true) {
+      System.out.printf("T = %d\n", t);
+      System.out.println("-----------------");
+      System.out.println(currentState);
+      if (currentState.isSolved()) {
+        return;
+      }
+      t++;
+      try {
+        Thread.sleep(fPlayDelay);
+      } catch (InterruptedException ignored) {
+      }
       var action = policy.get(currentState.hash());
       currentState = currentState.nextState(action);
     }
@@ -122,7 +163,7 @@ public class FifteenPuzzle {
         System.out.println("^^^^^^^^^^^^^^^^^");
       }
     });
-    System.out.println("#of states with no better next state = " + allWorse.size());
+    System.out.println("#of bad states = " + allWorse.size());
   }
 
   public void calculateOptimalValues() {
