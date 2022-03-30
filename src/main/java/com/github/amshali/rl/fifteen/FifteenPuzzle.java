@@ -5,16 +5,19 @@ import com.beust.jcommander.Parameter;
 import me.tongfei.progressbar.ProgressBar;
 import sutton.barto.rlbook.Utils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.ToDoubleFunction;
 
 public class FifteenPuzzle {
-  private final Map<FifteenPuzzleEpisode, Map<String, FifteenState>> episodeStates =
-      new ConcurrentHashMap<>(1_000_000);
-  private final Map<String, Integer> policy = new ConcurrentHashMap<>(1_000_000);
+  private final Map<String, FifteenState> states =
+      new ConcurrentHashMap<>(500_000);
+  private final Map<String, Integer> policy = new ConcurrentHashMap<>(500_000);
   private final Random random = new Random();
   @Parameter(names = {"--gamma", "-g", "--discount-rate"}, description = "Discount rate.")
   Double fDiscountRate = 0.9;
@@ -34,79 +37,62 @@ public class FifteenPuzzle {
     }
   }
 
-  private FifteenState nextState(FifteenState s, int action, FifteenPuzzleEpisode episode) {
+  private FifteenState nextState(FifteenState s, int action) {
     var next = s.nextState(action);
-    return episodeStates.get(episode).get(next.hash());
+    return states.get(next.hash());
   }
 
-  private ToDoubleFunction<Integer> actionValue(FifteenState s, FifteenPuzzleEpisode episode) {
+  private ToDoubleFunction<Integer> actionValue(FifteenState s) {
     return (Integer action) -> {
-      var nextState = nextState(s, action, episode);
-      return reward(nextState) + fDiscountRate * nextState.value();
+      var nextState = nextState(s, action);
+      return reward(s, nextState) + fDiscountRate * nextState.value();
     };
   }
 
-  public Double reward(FifteenState ns) {
-    if (ns.isTerminal()) {
-      return 10.0;
+  public Double reward(FifteenState currentState, FifteenState nextState) {
+    if (nextState.isSolved()) {
+      return 40.0;
+    }
+    if (nextState.rowsSolved() <= 2 && currentState.rowsSolved() <= 2) {
+      return 2.0 * (nextState.rowsSolved() - currentState.rowsSolved());
     }
     return -1.0;
   }
 
   public void run() throws InterruptedException {
-    init(FifteenPuzzleEpisode.ONE_TO_FOUR);
-    init(FifteenPuzzleEpisode.FIVE_TO_EIGHT);
-    init(FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
-    calculateOptimalValues(FifteenPuzzleEpisode.ONE_TO_FOUR);
-    calculateOptimalPolicy(FifteenPuzzleEpisode.ONE_TO_FOUR);
-    printBadStates(FifteenPuzzleEpisode.ONE_TO_FOUR);
-    calculateOptimalValues(FifteenPuzzleEpisode.FIVE_TO_EIGHT);
-    calculateOptimalPolicy(FifteenPuzzleEpisode.FIVE_TO_EIGHT);
-    printBadStates(FifteenPuzzleEpisode.FIVE_TO_EIGHT);
-    calculateOptimalValues(FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
-    calculateOptimalPolicy(FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
-    printBadStates(FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
+    // Generating state space
+    init(FifteenState.ONE_TO_FOUR_SOLVED_STATE, FifteenPuzzleEpisode.ONE_TO_FOUR);
+    init(FifteenState.FIVE_TO_EIGHT_SOLVED_STATE, FifteenPuzzleEpisode.FIVE_TO_EIGHT);
+    init(FifteenState.SOLVED_STATE, FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
+    calculateOptimalValues();
+    calculateOptimalPolicy();
+    printBadStates();
     System.out.println("Done!");
+
+    int totalTime = 0;
+    int trials = 10_000;
+    var pb = new ProgressBar("Solves", trials);
+    for (int i = 0; i < trials; i++) {
+      totalTime += solve(generateRandomState());
+      pb.step();
+    }
+    System.out.printf("Average steps per solve = %f\n", (totalTime + 0.0) / trials);
+  }
+
+  private int solve(FifteenState currentState) {
     int t = 0;
-    final Scanner input = new Scanner(System.in);
-    var currentState = generateRandomState();
-    var currentEpisode = FifteenPuzzleEpisode.ONE_TO_FOUR;
-    var stateInEpisode = new FifteenState(currentState.numbers(), currentEpisode);
     while (true) {
-      System.out.printf("T = %d\n", t);
-      System.out.println("-----------------");
-      System.out.println(currentState);
-      if (currentState.isTerminal()) {
-        System.out.println("===========================================");
-        System.out.println("Again? (y/n)");
-        var in = input.next();
-        if (!in.equalsIgnoreCase("y")) {
-          break;
-        }
-        t = 0;
-        currentState = generateRandomState();
-        currentEpisode = FifteenPuzzleEpisode.ONE_TO_FOUR;
-        stateInEpisode = new FifteenState(currentState.numbers(), currentEpisode);
-        continue;
-      }
-      if (stateInEpisode.isTerminal()) {
-        switch (currentEpisode) {
-          case ONE_TO_FOUR -> currentEpisode = FifteenPuzzleEpisode.FIVE_TO_EIGHT;
-          case FIVE_TO_EIGHT -> currentEpisode = FifteenPuzzleEpisode.NINE_TO_FIFTEEN;
-          case NINE_TO_FIFTEEN -> throw new RuntimeException("Should not get here.");
-        }
-        stateInEpisode = new FifteenState(currentState.numbers(), currentEpisode);
+      if (currentState.isSolved()) {
+        return t;
       }
       t++;
-      Thread.sleep(1000);
-      var action = policy.get(stateInEpisode.hash());
+      var action = policy.get(currentState.hash());
       currentState = currentState.nextState(action);
-      stateInEpisode = stateInEpisode.nextState(action);
     }
   }
 
   private FifteenState generateRandomState() {
-    var s = FifteenState.terminalStates.get(FifteenPuzzleEpisode.ONE_TO_FIFTEEN);
+    var s = FifteenState.SOLVED_STATE;
     var t = 0;
     while (t < 10000) {
       var actions = s.possibleActions();
@@ -116,10 +102,9 @@ public class FifteenPuzzle {
     return s;
   }
 
-  private void printBadStates(FifteenPuzzleEpisode episode) {
+  private void printBadStates() {
     var allWorse = new ArrayList<FifteenState>();
-    var states = episodeStates.get(episode);
-    states.keySet().parallelStream().forEach(h -> {
+    states.keySet().forEach(h -> {
       var s = states.get(h);
       if (s.isTerminal()) {
         return;
@@ -134,15 +119,14 @@ public class FifteenPuzzle {
       if (worse == s.actionState().size()) {
         allWorse.add(s);
         System.out.println(s);
-        System.out.println("^^^^^^^^^^^^^");
+        System.out.println("^^^^^^^^^^^^^^^^^");
       }
     });
     System.out.println("#of states with no better next state = " + allWorse.size());
   }
 
-  public void calculateOptimalValues(FifteenPuzzleEpisode episode) {
+  public void calculateOptimalValues() {
     var epoch = 0;
-    var states = episodeStates.get(episode);
     while (true) {
       epoch++;
       System.out.printf("Epoch %d\n", epoch);
@@ -155,8 +139,7 @@ public class FifteenPuzzle {
           return;
         }
         var oldValue = s.value();
-        s.setValue(
-            s.possibleActions().stream().mapToDouble(actionValue(s, episode)).max().orElse(0.0));
+        s.setValue(s.possibleActions().stream().mapToDouble(actionValue(s)).max().orElse(0.0));
         var localDelta = Math.abs(oldValue - s.value());
         synchronized (delta) {
           delta.set(Math.max(delta.get(), localDelta));
@@ -171,8 +154,7 @@ public class FifteenPuzzle {
     }
   }
 
-  public void calculateOptimalPolicy(FifteenPuzzleEpisode episode) {
-    var states = episodeStates.get(episode);
+  public void calculateOptimalPolicy() {
     var pb = new ProgressBar("Optimal π", states.keySet().size());
     states.keySet().parallelStream().forEach(h -> {
       var s = states.get(h);
@@ -180,33 +162,31 @@ public class FifteenPuzzle {
         pb.step();
         return;
       }
-      var possibleActions = s.possibleActions();
-      var actionValues =
-          possibleActions.stream().mapToDouble(this.actionValue(s, episode)).toArray();
-      var bestAction = possibleActions.get(Utils.argmax(actionValues));
+      var actions = s.possibleActions();
+      var actionValues = actions.stream().mapToDouble(this.actionValue(s)).toArray();
+      var bestAction = actions.get(Utils.argmax(actionValues));
       policy.put(h, bestAction);
       pb.step();
     });
     pb.close();
   }
 
-  private void init(FifteenPuzzleEpisode episode) {
-    episodeStates.putIfAbsent(episode, new ConcurrentHashMap<>());
-    var states = episodeStates.get(episode);
+  private void init(FifteenState initState, FifteenPuzzleEpisode episode) {
     var work = new LinkedBlockingQueue<FifteenState>();
-    var t = FifteenState.terminalStates.get(episode);
-    work.offer(t);
-    states.putIfAbsent(t.hash(), t);
+    work.offer(initState);
     var seen = new HashSet<>();
-    seen.add(t.hash());
     while (work.size() > 0) {
       var w = work.poll();
-      w.possibleActions().forEach(a -> {
+      states.putIfAbsent(w.hash(), w);
+      if (!w.isTerminal()) {
+        w.setValue(random.nextDouble());
+      }
+      w.actionsOf(episode).forEach(a -> {
         var ns = w.nextState(a);
         if (!seen.contains(ns.hash())) {
           states.putIfAbsent(ns.hash(), ns);
-          var possibleActions = ns.possibleActions();
-          policy.put(ns.hash(), possibleActions.get(random.nextInt(possibleActions.size())));
+          var goodActions = ns.goodActions();
+          policy.put(ns.hash(), goodActions.get(random.nextInt(goodActions.size())));
           work.offer(ns);
           seen.add(ns.hash());
         }
@@ -214,7 +194,7 @@ public class FifteenPuzzle {
     }
     states.keySet().parallelStream().forEach(h -> {
       var s = states.get(h);
-      s.possibleActions().forEach(a -> {
+      s.goodActions().forEach(a -> {
         var ns = s.nextState(a);
         s.actionState().put(a, ns.hash());
       });
