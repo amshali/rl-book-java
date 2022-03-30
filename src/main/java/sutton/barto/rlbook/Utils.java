@@ -33,62 +33,7 @@ public class Utils {
     return minIndex;
   }
 
-  public static Set<Integer[]> getPermutationsRecursive(Integer[] num) {
-    if (num == null) {
-      return null;
-    }
-
-    Set<Integer[]> perms = new HashSet<>();
-
-    if (num.length == 0) {
-      perms.add(new Integer[0]);
-      return perms;
-    }
-
-    int first = num[0];
-    Integer[] remainder = Arrays.copyOfRange(num, 1, num.length);
-    Set<Integer[]> subPerms = getPermutationsRecursive(remainder);
-    for (Integer[] subPerm : subPerms) {
-      for (int i = 0; i <= subPerm.length; ++i) { // '<='   IMPORTANT !!!
-        Integer[] newPerm = Arrays.copyOf(subPerm, subPerm.length + 1);
-        for (int j = newPerm.length - 1; j > i; --j) {
-          newPerm[j] = newPerm[j - 1];
-        }
-        newPerm[i] = first;
-        perms.add(newPerm);
-      }
-    }
-
-    return perms;
-  }
-
-  public static List<Vector<Integer>> permutations(Vector<Integer> dims) {
-    var current = new Vector<Integer>(dims.size());
-    dims.forEach(d -> {
-      if (d < 1) {
-        throw new RuntimeException("Invalid dimension value " + d + " for permutation. Must be > " +
-            "0.");
-      }
-      current.add(0);
-    });
-    var results = new ArrayList<Vector<Integer>>();
-    results.add(new Vector<>(current));
-    while (true) {
-      for (int i = 0; i < dims.size(); i++) {
-        current.set(i, (current.get(i) + 1) % dims.get(i));
-        if (current.get(i) != 0) {
-          break;
-        }
-      }
-      var sum = current.stream().reduce(Integer::sum);
-      if (sum.isPresent() && sum.get() == 0) {
-        break;
-      }
-      results.add(new Vector<>(current));
-    }
-    return results;
-  }
-
+  @SafeVarargs
   public static <T> Vector<T> vectorOf(T... data) {
     var v = new Vector<T>(data.length);
     Collections.addAll(v, data);
@@ -111,6 +56,35 @@ public class Utils {
     return matrix;
   }
 
+  public static Set<int[]> binaryCombinations(int zeros, int ones) {
+    var result = new HashSet<int[]>();
+    int bits = zeros + ones;
+    if (bits > 32 || bits < 1) {
+      throw new RuntimeException("Invalid arguments");
+    }
+    int bound = (int) Math.pow(2, bits);
+    for (int i = 0; i < bound; i++) {
+      var b = generateBitVector(i, bits);
+      if (ones == Arrays.stream(b).sum()) {
+        result.add(b);
+      }
+    }
+    return result;
+  }
+
+  public static String join(Object[] vs, String delimiter) {
+    boolean first = true;
+    StringBuilder sb = new StringBuilder();
+    for (Object v : vs) {
+      if (!first) {
+        sb.append(delimiter);
+      }
+      sb.append(v);
+      first = false;
+    }
+    return sb.toString();
+  }
+
   /**
    * Make a random choice from the given the probabilities.
    *
@@ -129,10 +103,16 @@ public class Utils {
     throw new RuntimeException("Could not choose a value with given probabilities.");
   }
 
+  public static int[] generateBitVector(int n, int bits) {
+    var r = new int[bits];
+    for (int i = 0; i < bits; i++) {
+      r[bits - i - 1] = n % 2;
+      n /= 2;
+    }
+    return r;
+  }
+
   public static void main(String[] args) {
-    var perms = getPermutationsRecursive(new Integer[]{1, 2, 3, 4, 5});
-    perms.forEach(p -> {
-      System.out.println(Arrays.toString(p));
-    });
+    binaryCombinations(5, 8).forEach(r -> System.out.println(Arrays.toString(r)));
   }
 }
