@@ -65,14 +65,23 @@ public class GamblersProblem {
                       actionReturns.size()).stream().mapToDouble(d -> round(d, 5))
                   .toArray()) + 1]);
     });
-    XYChart policyChart = createChart(800, 500, "Capital", "Final policy (stake)",
+    XYChart policyChart = createChart(1100, 400, "Capital", "Final policy (stake)",
         XYSeries.XYSeriesRenderStyle.Step);
+    policyChart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
     policyChart.addSeries("Policy with head probability = " + fHeadProb, states, policy);
     var charts = new ArrayList<XYChart>();
     charts.add(policyChart);
     BitmapEncoder.saveBitmap(policyChart, "./images/chapter04-gamblers-problem-policy.png",
         BitmapEncoder.BitmapFormat.PNG);
-    new SwingWrapper<>(charts, 1, 1).displayChartMatrix();
+    XYChart sweepChart = createChart(1100, 600, "Capital", "Value estimates",
+        XYSeries.XYSeriesRenderStyle.Line);
+    sweepChart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+    IntStream.range(0, sweepHistory.size())
+        .forEach(i -> sweepChart.addSeries("Sweep " + i, states, sweepHistory.get(i)));
+    charts.add(sweepChart);
+    BitmapEncoder.saveBitmap(policyChart, "./images/chapter04-gamblers-problem-sweep.png",
+        BitmapEncoder.BitmapFormat.PNG);
+    new SwingWrapper<>(charts, 2, 1).displayChartMatrix();
   }
 
   private Double round(Double d, int decimals) {
@@ -86,7 +95,7 @@ public class GamblersProblem {
         .xAxisTitle(xTitle).yAxisTitle(yTitle).build();
     var styler = chart.getStyler();
     styler.setDefaultSeriesRenderStyle(renderStyle).setMarkerSize(0);
-    styler.setLegendPosition(Styler.LegendPosition.OutsideS);
+    styler.setLegendPosition(Styler.LegendPosition.OutsideE);
     styler.setChartTitleVisible(false);
     return chart;
   }
