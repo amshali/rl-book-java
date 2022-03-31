@@ -2,13 +2,11 @@ package sutton.barto.rlbook.chapter04;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import org.knowm.xchart.SwingWrapper;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.*;
 import org.knowm.xchart.style.Styler;
 import sutton.barto.rlbook.Utils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -31,7 +29,7 @@ public class GamblersProblem {
     gamblersProblem.run();
   }
 
-  private void figure4_3() {
+  private void figure4_3() throws IOException {
     var states = IntStream.range(0, fGoal + 1).boxed().collect(Collectors.toList());
     var stateValue = states.stream().mapToDouble(i -> 0.0).boxed().collect(Collectors.toList());
     stateValue.set(fGoal, 1.0);
@@ -67,11 +65,13 @@ public class GamblersProblem {
                       actionReturns.size()).stream().mapToDouble(d -> round(d, 5))
                   .toArray()) + 1]);
     });
-    XYChart capital = createChart(900, 500, "Capital", "Final policy (stake)",
+    XYChart policyChart = createChart(800, 500, "Capital", "Final policy (stake)",
         XYSeries.XYSeriesRenderStyle.Step);
-    capital.addSeries("Stake", states, policy);
+    policyChart.addSeries("Policy with head probability = " + fHeadProb, states, policy);
     var charts = new ArrayList<XYChart>();
-    charts.add(capital);
+    charts.add(policyChart);
+    BitmapEncoder.saveBitmap(policyChart, "./images/chapter04-gamblers-problem-policy.png",
+        BitmapEncoder.BitmapFormat.PNG);
     new SwingWrapper<>(charts, 1, 1).displayChartMatrix();
   }
 
@@ -92,6 +92,10 @@ public class GamblersProblem {
   }
 
   public void run() {
-    figure4_3();
+    try {
+      figure4_3();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }
