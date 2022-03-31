@@ -10,6 +10,10 @@ public class Utils {
   private static final Random random = new Random();
 
   public static int argmax(double[] a) {
+    return argmax(Arrays.stream(a).boxed().toArray(Double[]::new));
+  }
+
+  public static int argmax(Double[] a) {
     var max = Double.NEGATIVE_INFINITY;
     int maxIndex = -1;
     for (int i = 0; i < a.length; i++) {
