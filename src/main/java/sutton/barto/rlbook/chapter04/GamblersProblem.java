@@ -62,7 +62,7 @@ public class GamblersProblem {
       policy.set(state,
           actions[Utils.argmax(
               actionReturns.subList(1,
-                      actionReturns.size()).stream().mapToDouble(d -> round(d, 5))
+                      actionReturns.size()).stream().mapToDouble(d -> Utils.round(d, 5))
                   .toArray()) + 1]);
     });
     XYChart policyChart = createChart(1100, 400, "Capital", "Final policy (stake)",
@@ -82,11 +82,6 @@ public class GamblersProblem {
     BitmapEncoder.saveBitmap(policyChart, "./images/chapter04-gamblers-problem-sweep.png",
         BitmapEncoder.BitmapFormat.PNG);
     new SwingWrapper<>(charts, 2, 1).displayChartMatrix();
-  }
-
-  private Double round(Double d, int decimals) {
-    var format = "%%.%df".formatted(decimals);
-    return Double.valueOf(format.formatted(d));
   }
 
   private XYChart createChart(int width, int height, String xTitle, String yTitle,

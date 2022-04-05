@@ -13,6 +13,11 @@ public class Utils {
     return argmax(Arrays.stream(a).boxed().toArray(Double[]::new));
   }
 
+  public static Double round(Double d, int decimals) {
+    var format = "%%.%df".formatted(decimals);
+    return Double.valueOf(format.formatted(d));
+  }
+
   public static int argmax(Double[] a) {
     var max = Double.NEGATIVE_INFINITY;
     int maxIndex = -1;
