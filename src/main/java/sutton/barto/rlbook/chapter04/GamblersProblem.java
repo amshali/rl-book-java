@@ -65,7 +65,7 @@ public class GamblersProblem {
                       actionReturns.size()).stream().mapToDouble(d -> Utils.round(d, 5))
                   .toArray()) + 1]);
     });
-    XYChart policyChart = createChart(1100, 400, "Capital", "Final policy (stake)",
+    XYChart policyChart = createChart(1100, 400, "Policy", "Capital", "Final policy (stake)",
         XYSeries.XYSeriesRenderStyle.Step);
     policyChart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
     policyChart.addSeries("Policy with head probability = " + fHeadProb, states, policy);
@@ -73,7 +73,7 @@ public class GamblersProblem {
     charts.add(policyChart);
     BitmapEncoder.saveBitmap(policyChart, "./images/chapter04-gamblers-problem-policy.png",
         BitmapEncoder.BitmapFormat.PNG);
-    XYChart sweepChart = createChart(1100, 600, "Capital", "Value estimates",
+    XYChart sweepChart = createChart(1100, 600, "Sweep", "Capital", "Value estimates",
         XYSeries.XYSeriesRenderStyle.Line);
     sweepChart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
     IntStream.range(0, sweepHistory.size())
@@ -84,14 +84,14 @@ public class GamblersProblem {
     new SwingWrapper<>(charts, 2, 1).displayChartMatrix();
   }
 
-  private XYChart createChart(int width, int height, String xTitle, String yTitle,
+  private XYChart createChart(int width, int height, String title, String xTitle, String yTitle,
                               XYSeries.XYSeriesRenderStyle renderStyle) {
-    final var chart = new XYChartBuilder().width(width).height(height)
+    final var chart = new XYChartBuilder().title(title).width(width).height(height)
         .xAxisTitle(xTitle).yAxisTitle(yTitle).build();
     var styler = chart.getStyler();
     styler.setDefaultSeriesRenderStyle(renderStyle).setMarkerSize(0);
     styler.setLegendPosition(Styler.LegendPosition.OutsideE);
-    styler.setChartTitleVisible(false);
+    styler.setChartTitleVisible(true);
     return chart;
   }
 
