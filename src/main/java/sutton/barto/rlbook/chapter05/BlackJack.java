@@ -305,7 +305,7 @@ public class BlackJack {
     charts.add(chartValueUsableAce);
     charts.add(chartActionValueNoUsableAce);
     charts.add(chartValueNoUsableAce);
-    BitmapEncoder.saveBitmap(charts, 2, 2, "./images/chapter05-blackjack-es .png",
+    BitmapEncoder.saveBitmap(charts, 2, 2, "./images/chapter05-blackjack-es.png",
         BitmapEncoder.BitmapFormat.PNG);
     new SwingWrapper<>(charts, 2, 2).displayChartMatrix();
   }
