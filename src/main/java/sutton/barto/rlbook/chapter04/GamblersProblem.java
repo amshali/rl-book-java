@@ -79,7 +79,7 @@ public class GamblersProblem {
     IntStream.range(0, sweepHistory.size())
         .forEach(i -> sweepChart.addSeries("Sweep " + i, states, sweepHistory.get(i)));
     charts.add(sweepChart);
-    BitmapEncoder.saveBitmap(policyChart, "./images/chapter04-gamblers-problem-sweep.png",
+    BitmapEncoder.saveBitmap(sweepChart, "./images/chapter04-gamblers-problem-sweep.png",
         BitmapEncoder.BitmapFormat.PNG);
     new SwingWrapper<>(charts, 2, 1).displayChartMatrix();
   }
