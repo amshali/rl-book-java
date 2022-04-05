@@ -211,7 +211,6 @@ public class BlackJack {
     var pb = new ProgressBar("Exploring starts", episodes);
     var behaviorPolicy = new ESBehaviorPolicy(stateActionValues, stateActionPairCount);
     var targetPolicyPlayer = new TargetPolicyPlayer();
-    var firstVisitCheck = new HashSet<>();
     IntStream.range(0, episodes).forEach(episode -> {
       // for each episode, use a randomly initialized state and action
       var initState = stateOf(random.nextBoolean(), random.nextInt(12, 22), random.nextInt(1, 11));
@@ -219,6 +218,7 @@ public class BlackJack {
       var currentPolicy = episode > 0 ? behaviorPolicy : targetPolicyPlayer;
       Map<String, Object> result = play(currentPolicy, initState, initAction);
       var trajectory = (List<TrajectoryItem>) result.get(TRAJECTORY_STR);
+      var firstVisitCheck = new HashSet<>();
       trajectory.forEach(t -> {
         var usableAceInt = (Boolean) t.state.get(USABLE_ACE_STATE) ? 1 : 0;
         var playerSum = (Integer) t.state.get(PLAYER_SUM_STATE) - 12;
@@ -226,7 +226,7 @@ public class BlackJack {
         var stateAction = "%d,%d,%d,%d".formatted(usableAceInt, playerSum, dealerCard, t.action);
         if (!firstVisitCheck.contains(stateAction)) {
           firstVisitCheck.add(stateAction);
-          // Following the first occurrence of (s, a)
+        } else {
           return;
         }
         // This is essentially appending the return to the list of Returns(s, a)
