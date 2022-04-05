@@ -4,10 +4,10 @@ import sutton.barto.rlbook.Position;
 
 import java.util.*;
 
-public class NineState {
+public class EightState {
   public static final int NUM_CELLS = 9;
   public static final int NIL_VALUE = 9;
-  public static final NineState TERMINAL = terminalState();
+  public static final EightState TERMINAL = terminalState();
   public final Map<Integer, String> actionState = new HashMap<>();
   private final int[] numbers;
   private final List<Integer> possibleActions = new ArrayList<>();
@@ -16,7 +16,7 @@ public class NineState {
   private int nilIndex;
   private Double value = 1.0;
 
-  public NineState(int[] numbers) {
+  public EightState(int[] numbers) {
     this.numbers = numbers;
     isTerminal = true;
     for (int i = 0; i < this.numbers.length; i++) {
@@ -48,23 +48,23 @@ public class NineState {
     }
   }
 
-  private static NineState terminalState() {
+  private static EightState terminalState() {
     var ints = new int[NUM_CELLS];
     for (int i = 0; i < NUM_CELLS; i++) {
       ints[i] = i + 1;
     }
-    return new NineState(ints);
+    return new EightState(ints);
   }
 
-  public static NineState nextState(NineState s, int action) {
+  public static EightState nextState(EightState s, int action) {
     if (!s.possibleActions().contains(action)) {
       throw new RuntimeException("Invalid action: " + action + " in state: " + s);
     }
     int[] ints = s.cloneNumbers();
     var actionCell = ints[action];
-    ints[action] = NineState.NIL_VALUE;
+    ints[action] = EightState.NIL_VALUE;
     ints[s.nilIndex()] = actionCell;
-    return new NineState(ints);
+    return new EightState(ints);
   }
 
   private Position pointOf(int i) {

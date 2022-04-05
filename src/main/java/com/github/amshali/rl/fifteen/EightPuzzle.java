@@ -11,9 +11,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.ToDoubleFunction;
 
-public class NinePuzzle {
+public class EightPuzzle {
 
-  private final Map<String, NineState> states = new ConcurrentHashMap<>(1_000_000);
+  private final Map<String, EightState> states = new ConcurrentHashMap<>(1_000_000);
   private final Map<String, Integer> policy = new ConcurrentHashMap<>(1_000_000);
   private final Random random = new Random();
   @Parameter(names = {"--gamma", "-g", "--discount-rate"}, description = "Discount rate.")
@@ -22,7 +22,7 @@ public class NinePuzzle {
   Double fTheta = 0.1;
 
   public static void main(String[] args) throws InterruptedException {
-    var fifteen = new NinePuzzle();
+    var fifteen = new EightPuzzle();
     JCommander.newBuilder()
         .addObject(fifteen)
         .build()
@@ -35,7 +35,7 @@ public class NinePuzzle {
     calculateOptimalValues();
     calculateOptimalPolicy();
     System.out.println("Done!");
-    var allWorse = new ArrayList<NineState>();
+    var allWorse = new ArrayList<EightState>();
     states.keySet().parallelStream().forEach(h -> {
       var s = states.get(h);
       if (s.isTerminal()) {
@@ -55,8 +55,8 @@ public class NinePuzzle {
       }
     });
     System.out.println("#of states with no better next state = " + allWorse.size());
-    var allStates = states.values().toArray(NineState[]::new);
-    NineState s = allStates[random.nextInt(allStates.length)];
+    var allStates = states.values().toArray(EightState[]::new);
+    EightState s = allStates[random.nextInt(allStates.length)];
     int t = 0;
     final Scanner input = new Scanner(System.in);
     while (true) {
@@ -80,12 +80,12 @@ public class NinePuzzle {
     }
   }
 
-  private NineState nextState(NineState s, int action) {
-    var next = NineState.nextState(s, action);
+  private EightState nextState(EightState s, int action) {
+    var next = EightState.nextState(s, action);
     return states.get(next.hash());
   }
 
-  private ToDoubleFunction<Integer> actionValue(NineState s) {
+  private ToDoubleFunction<Integer> actionValue(EightState s) {
     return (Integer action) -> {
       var nextState = nextState(s, action);
       return reward(nextState) + fDiscountRate * nextState.value();
@@ -138,7 +138,7 @@ public class NinePuzzle {
     pb.close();
   }
 
-  public Double reward(NineState ns) {
+  public Double reward(EightState ns) {
     if (ns.isTerminal()) {
       return 10.0;
     }
@@ -146,15 +146,15 @@ public class NinePuzzle {
   }
 
   private void init() {
-    var work = new LinkedBlockingQueue<NineState>();
-    work.offer(NineState.TERMINAL);
-    states.putIfAbsent(NineState.TERMINAL.hash(), NineState.TERMINAL);
+    var work = new LinkedBlockingQueue<EightState>();
+    work.offer(EightState.TERMINAL);
+    states.putIfAbsent(EightState.TERMINAL.hash(), EightState.TERMINAL);
     var seen = new HashSet<>();
-    seen.add(NineState.TERMINAL.hash());
+    seen.add(EightState.TERMINAL.hash());
     while (work.size() > 0) {
       var w = work.poll();
       w.possibleActions().forEach(a -> {
-        var ns = NineState.nextState(w, a);
+        var ns = EightState.nextState(w, a);
         if (!seen.contains(ns.hash())) {
           states.putIfAbsent(ns.hash(), ns);
           var possibleActions = ns.possibleActions();
