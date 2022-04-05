@@ -2,6 +2,7 @@ package sutton.barto.rlbook.chapter05;
 
 import com.beust.jcommander.JCommander;
 import me.tongfei.progressbar.ProgressBar;
+import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.HeatMapChart;
 import org.knowm.xchart.HeatMapChartBuilder;
 import org.knowm.xchart.SwingWrapper;
@@ -9,6 +10,7 @@ import org.knowm.xchart.style.Styler;
 import sutton.barto.rlbook.MultiDimArray;
 import sutton.barto.rlbook.Utils;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -55,7 +57,11 @@ public class BlackJack {
         .addObject(blackJack)
         .build()
         .parse(args);
-    blackJack.run();
+    try {
+      blackJack.run();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   Map<String, Object> stateOf(Boolean usableAce, Integer playerSum,
@@ -68,7 +74,7 @@ public class BlackJack {
     return Math.min(random.nextInt(14) + 1, 10);
   }
 
-  public void run() {
+  public void run() throws IOException {
     figure5_2();
   }
 
@@ -240,7 +246,7 @@ public class BlackJack {
     return new MultiDimArray<>(res, stateActionValues.dimensions());
   }
 
-  void figure5_2() {
+  void figure5_2() throws IOException {
     var esStateActionValues = monteCarloExploringStarts(5_000_000);
     var stateValueNoUsableAce = new ArrayList<Number[]>();
     var stateValueUsableAce = new ArrayList<Number[]>();
@@ -299,6 +305,8 @@ public class BlackJack {
     charts.add(chartValueUsableAce);
     charts.add(chartActionValueNoUsableAce);
     charts.add(chartValueNoUsableAce);
+    BitmapEncoder.saveBitmap(charts, 2, 2, "./images/chapter05-blackjack-es .png",
+        BitmapEncoder.BitmapFormat.PNG);
     new SwingWrapper<>(charts, 2, 2).displayChartMatrix();
   }
 
