@@ -320,22 +320,11 @@ public class BlackJack {
     return chart;
   }
 
-
-  class TargetPolicyPlayer implements TriFunction<Boolean, Integer, Integer, Integer> {
-    @Override
-    public Integer apply(Boolean usableAce, Integer playerSum, Integer dealerCard) {
-      return policyPlayer.get(playerSum);
-    }
-  }
-
-  class BehaviorPolicyPlayer implements TriFunction<Boolean, Integer, Integer, Integer> {
-    @Override
-    public Integer apply(Boolean usableAce, Integer playerSum, Integer dealerCard) {
-      return random.nextDouble() < 0.5 ? ACTION_STAND : ACTION_HIT;
-    }
-  }
-
-  class ESBehaviorPolicy implements TriFunction<Boolean, Integer, Integer, Integer> {
+  /**
+   * ES default policy which uses the averages of values for each action so far to find the best
+   * one(greedy).
+   */
+  static class ESBehaviorPolicy implements TriFunction<Boolean, Integer, Integer, Integer> {
     MultiDimArray<Integer> stateActionValues;
     MultiDimArray<Integer> stateActionPairCount;
 
@@ -355,8 +344,21 @@ public class BlackJack {
         vs.add(1.0 * stateActionValues.get(dealerCard, playerSum, usableAceInt, i) /
             stateActionPairCount.get(dealerCard, playerSum, usableAceInt, i));
       }
-      var maxV = vs.stream().max(Double::compare);
       return Utils.argmax(vs.toArray(Double[]::new));
+    }
+  }
+
+  class TargetPolicyPlayer implements TriFunction<Boolean, Integer, Integer, Integer> {
+    @Override
+    public Integer apply(Boolean usableAce, Integer playerSum, Integer dealerCard) {
+      return policyPlayer.get(playerSum);
+    }
+  }
+
+  class BehaviorPolicyPlayer implements TriFunction<Boolean, Integer, Integer, Integer> {
+    @Override
+    public Integer apply(Boolean usableAce, Integer playerSum, Integer dealerCard) {
+      return random.nextDouble() < 0.5 ? ACTION_STAND : ACTION_HIT;
     }
   }
 }
