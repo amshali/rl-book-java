@@ -82,6 +82,25 @@ public class BlackJack {
     return cardId == 1 ? 11 : cardId;
   }
 
+  Map<String, Object> playHit(Boolean usableAcePlayer, Integer playerSum) {
+    // if hit, get new card
+    var card = getCard();
+    // Keep track of the ace count. the usable_ace_player flag is insufficient alone as it cannot
+    // distinguish between having one ace or two.
+    var aceCount = usableAcePlayer ? 1 : 0;
+    if (card == 1) {
+      aceCount++;
+    }
+    playerSum += cardValue(card);
+    // If the player has a usable ace, use it as 1 to avoid busting and continue.
+    while (playerSum > 21 && aceCount > 0) {
+      playerSum -= 10;
+      aceCount--;
+    }
+    usableAcePlayer = aceCount == 1;
+    return Map.of(PLAYER_SUM_STATE, playerSum, USABLE_ACE_STATE, usableAcePlayer);
+  }
+
   Map<String, Object> play(TriFunction<Boolean, Integer, Integer, Integer> policyPlayer,
                            Map<String, Object> initialState,
                            Integer initialAction) {
@@ -149,25 +168,13 @@ public class BlackJack {
       if (action == ACTION_STAND) {
         break;
       }
-      // if hit, get new card
-      var card = getCard();
-      // Keep track of the ace count. the usable_ace_player flag is insufficient alone as it cannot
-      // distinguish between having one ace or two.
-      var aceCount = usableAcePlayer ? 1 : 0;
-      if (card == 1) {
-        aceCount++;
-      }
-      playerSum += cardValue(card);
-      // If the player has a usable ace, use it as 1 to avoid busting and continue.
-      while (playerSum > 21 && aceCount > 0) {
-        playerSum -= 10;
-        aceCount--;
-      }
+      Map<String, Object> r1 = playHit(usableAcePlayer, playerSum);
+      usableAcePlayer = (boolean) r1.get(USABLE_ACE_STATE);
+      playerSum = (int) r1.get(PLAYER_SUM_STATE);
       if (playerSum > 21) {
         // player busts
         return Map.of(STATE_STR, state, REWARD_STR, -1, TRAJECTORY_STR, playerTrajectory);
       }
-      usableAcePlayer = aceCount == 1;
     }
 
     // Dealer's turn
@@ -176,22 +183,13 @@ public class BlackJack {
       if (action == ACTION_STAND) {
         break;
       }
-      var card = getCard();
-      var aceCount = usableAceDealer ? 1 : 0;
-      if (card == 1) {
-        aceCount++;
-      }
-      dealerSum += cardValue(card);
-      // If the dealer has a usable ace, use it as 1 to avoid busting and continue.
-      while (dealerSum > 21 && aceCount > 0) {
-        dealerSum -= 10;
-        aceCount--;
-      }
+      Map<String, Object> r1 = playHit(usableAceDealer, dealerSum);
+      usableAceDealer = (boolean) r1.get(USABLE_ACE_STATE);
+      dealerSum = (int) r1.get(PLAYER_SUM_STATE);
       if (dealerSum > 21) {
         // dealer loses
         return Map.of(STATE_STR, state, REWARD_STR, 1, TRAJECTORY_STR, playerTrajectory);
       }
-      usableAceDealer = aceCount == 1;
     }
     // compare the sum between player and dealer
     if (playerSum > dealerSum) {
