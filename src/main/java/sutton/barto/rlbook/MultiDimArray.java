@@ -1,8 +1,6 @@
 package sutton.barto.rlbook;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -12,6 +10,7 @@ public class MultiDimArray<T> {
   private final Integer[] dimensions;
   private final Integer[] skips;
   private final Vector<T> data = new Vector<>();
+  private List<Integer[]> coordinates;
 
   public MultiDimArray(T init, Integer... dimensions) {
     for (Integer dimension : dimensions) {
@@ -31,6 +30,13 @@ public class MultiDimArray<T> {
       }
     }
     skips[dimensions.length - 1] = 0;
+    coordinates = new ArrayList<>();
+    var current = startingCoordinate();
+    coordinates.add(current);
+    while (hasNextCoordinate(current)) {
+      current = nextCoordinate(current);
+      coordinates.add(current);
+    }
   }
 
   public MultiDimArray(Vector<T> initData, Integer... dimensions) {
@@ -59,11 +65,13 @@ public class MultiDimArray<T> {
   }
 
   public static void main(String[] args) {
-//    var m = new MultiDimArray<Double>(new Integer[]{3, 2, 2});
-//    m.set(new Integer[]{1, 1, 0}, 1.2);
-//    m.set(new Integer[]{0, 0, 1}, -1.3);
-//    m.set(new Integer[]{2, 1, 1}, 2.3);
-//    m.stream().forEach(System.out::println);
+    var m = new MultiDimArray<Double>(0.0, 3, 5, 4);
+    var current = m.startingCoordinate();
+    System.out.println(Arrays.toString(current));
+    while (m.hasNextCoordinate(current)) {
+      current = m.nextCoordinate(current);
+      System.out.println(Arrays.toString(current));
+    }
   }
 
   public Integer[] dimensions() {
@@ -83,6 +91,45 @@ public class MultiDimArray<T> {
         throw new RuntimeException("Invalid coordinates: " + Arrays.toString(coordinates));
       }
     }
+  }
+
+  public Integer[] startingCoordinate() {
+    var r = new Integer[this.dimensions.length];
+    Arrays.fill(r, 0);
+    return r;
+  }
+
+  public Integer[] nextCoordinate(Integer[] current) {
+    if (!hasNextCoordinate(current)) {
+      throw new RuntimeException("Has no next coordinate: " + Arrays.toString(current));
+    }
+    Integer[] next = Arrays.copyOf(current, current.length);
+    int lastI = next.length - 1;
+    next[lastI] = (next[lastI] + 1) % dimensions[lastI];
+    if (next[lastI] == 0) {
+      int j = lastI - 1;
+      while (j >= 0) {
+        next[j] = (next[j] + 1) % dimensions[j];
+        if (next[j] > 0) {
+          break;
+        }
+        j--;
+      }
+    }
+    return next;
+  }
+
+  public Boolean hasNextCoordinate(Integer[] current) {
+    for (int i = 0; i < dimensions.length; i++) {
+      if (current[i] < dimensions[i] - 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public List<Integer[]> coordinates() {
+    return coordinates;
   }
 
   public void set(T datum, Integer... coordinates) {
