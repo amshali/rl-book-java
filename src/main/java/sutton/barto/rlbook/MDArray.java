@@ -5,10 +5,8 @@ import java.util.Vector;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class MDArray {
-
   private final Integer[] dimensions;
   private final Integer[] skips;
   private final Vector<Number> data = new Vector<>();
@@ -44,10 +42,6 @@ public class MDArray {
 
   public Integer[] dimensions() {
     return dimensions;
-  }
-
-  public Stream<Number> stream() {
-    return data.stream();
   }
 
   public MDArray op(BiFunction<Number, Number, Number> f, MDArray other) {

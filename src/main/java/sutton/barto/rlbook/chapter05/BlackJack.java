@@ -231,8 +231,7 @@ public class BlackJack {
         }
         // This is essentially appending the return to the list of Returns(s, a)
         stateActionValues.set((d -> d.intValue() + (Integer) result.get(REWARD_STR)), dealerCard,
-            playerSum,
-            usableAceInt, t.action);
+            playerSum, usableAceInt, t.action);
         stateActionPairCount.set((d -> d.intValue() + 1), dealerCard, playerSum, usableAceInt,
             t.action);
       });
