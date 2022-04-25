@@ -7,7 +7,7 @@ import org.knowm.xchart.HeatMapChart;
 import org.knowm.xchart.HeatMapChartBuilder;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.style.Styler;
-import sutton.barto.rlbook.MultiDimArray;
+import sutton.barto.rlbook.MDArray;
 import sutton.barto.rlbook.Utils;
 
 import java.io.IOException;
@@ -201,12 +201,13 @@ public class BlackJack {
     return Map.of(STATE_STR, state, REWARD_STR, -1, TRAJECTORY_STR, playerTrajectory);
   }
 
-  MultiDimArray monteCarloExploringStarts(Integer episodes) {
+  MDArray monteCarloExploringStarts(Integer episodes) {
     // (playerSum, dealerCard, usableAce, action)
-    var stateActionValues = new MultiDimArray(0, 10, 10, 2, 2);
+    var dims = new Integer[]{10, 10, 2, 2};
+    var stateActionValues = new MDArray(0, dims);
     // Initialize counts to 1 to avoid division by 0
     // For computing average of Returns(s, a). It is essentially a counter.
-    var stateActionPairCount = new MultiDimArray(1, 10, 10, 2, 2);
+    var stateActionPairCount = new MDArray(1, dims);
     var pb = new ProgressBar("Exploring starts", episodes);
     var behaviorPolicy = new ESBehaviorPolicy(stateActionValues, stateActionPairCount);
     var targetPolicyPlayer = new TargetPolicyPlayer();
@@ -322,11 +323,10 @@ public class BlackJack {
    * one(greedy).
    */
   static class ESBehaviorPolicy implements TriFunction<Boolean, Integer, Integer, Integer> {
-    MultiDimArray stateActionValues;
-    MultiDimArray stateActionPairCount;
+    MDArray stateActionValues;
+    MDArray stateActionPairCount;
 
-    public ESBehaviorPolicy(MultiDimArray stateActionValues,
-                            MultiDimArray stateActionPairCount) {
+    public ESBehaviorPolicy(MDArray stateActionValues, MDArray stateActionPairCount) {
       this.stateActionValues = stateActionValues;
       this.stateActionPairCount = stateActionPairCount;
     }
