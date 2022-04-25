@@ -3,17 +3,18 @@ package sutton.barto.rlbook;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class MultiDimArray<T> {
+public class MultiDimArray {
 
   private final Integer[] dimensions;
   private final Integer[] skips;
-  private final Vector<T> data = new Vector<>();
+  private final Vector<Number> data = new Vector<>();
 
-  public MultiDimArray(T init, Integer... dimensions) {
+  public MultiDimArray(Number init, Integer... dimensions) {
     for (Integer dimension : dimensions) {
       if (dimension < 1 || dimension > 10000) {
         throw new RuntimeException("Invalid argument");
@@ -33,7 +34,7 @@ public class MultiDimArray<T> {
     skips[dimensions.length - 1] = 0;
   }
 
-  public MultiDimArray(Vector<T> initData, Integer... dimensions) {
+  public MultiDimArray(Vector<? extends Number> initData, Integer... dimensions) {
     for (Integer dimension : dimensions) {
       if (dimension < 1 || dimension > 10000) {
         throw new RuntimeException("Invalid argument");
@@ -70,8 +71,16 @@ public class MultiDimArray<T> {
     return dimensions;
   }
 
-  public Stream<T> stream() {
+  public Stream<Number> stream() {
     return data.stream();
+  }
+
+  public MultiDimArray op(BiFunction<Number, Number, Number> f, MultiDimArray other) {
+    var result = new Vector<Number>(data.size());
+    for (int i = 0; i < data.size(); i++) {
+      result.add(i, f.apply(data.get(i), other.data.get(i)));
+    }
+    return new MultiDimArray(result, this.dimensions());
   }
 
   private void checkCoordinates(Integer[] coordinates) {
@@ -85,11 +94,11 @@ public class MultiDimArray<T> {
     }
   }
 
-  public void set(T datum, Integer... coordinates) {
+  public void set(Number datum, Integer... coordinates) {
     data.set(getIndex(coordinates), datum);
   }
 
-  public void getSet(Function<T, T> f, Integer... coordinates) {
+  public void set(Function<Number, Number> f, Integer... coordinates) {
     int index = getIndex(coordinates);
     data.set(index, f.apply(data.get(index)));
   }
@@ -104,7 +113,7 @@ public class MultiDimArray<T> {
     return index;
   }
 
-  public T get(Integer... coordinates) {
+  public Number get(Integer... coordinates) {
     return data.get(getIndex(coordinates));
   }
 
@@ -112,7 +121,7 @@ public class MultiDimArray<T> {
     return data.size();
   }
 
-  public Iterator<T> iterator() {
+  public Iterator<Number> iterator() {
     return data.iterator();
   }
 }

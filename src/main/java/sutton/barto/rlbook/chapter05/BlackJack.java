@@ -12,6 +12,7 @@ import sutton.barto.rlbook.Utils;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.stream.IntStream;
 
 @FunctionalInterface
@@ -200,12 +201,12 @@ public class BlackJack {
     return Map.of(STATE_STR, state, REWARD_STR, -1, TRAJECTORY_STR, playerTrajectory);
   }
 
-  MultiDimArray<Double> monteCarloExploringStarts(Integer episodes) {
+  MultiDimArray monteCarloExploringStarts(Integer episodes) {
     // (playerSum, dealerCard, usableAce, action)
-    var stateActionValues = new MultiDimArray<>(0, 10, 10, 2, 2);
+    var stateActionValues = new MultiDimArray(0, 10, 10, 2, 2);
     // Initialize counts to 1 to avoid division by 0
     // For computing average of Returns(s, a). It is essentially a counter.
-    var stateActionPairCount = new MultiDimArray<>(1, 10, 10, 2, 2);
+    var stateActionPairCount = new MultiDimArray(1, 10, 10, 2, 2);
     var pb = new ProgressBar("Exploring starts", episodes);
     var behaviorPolicy = new ESBehaviorPolicy(stateActionValues, stateActionPairCount);
     var targetPolicyPlayer = new TargetPolicyPlayer();
@@ -228,20 +229,18 @@ public class BlackJack {
           return;
         }
         // This is essentially appending the return to the list of Returns(s, a)
-        stateActionValues.getSet((d -> d + (Integer) result.get(REWARD_STR)), dealerCard, playerSum,
+        stateActionValues.set((d -> d.intValue() + (Integer) result.get(REWARD_STR)), dealerCard,
+            playerSum,
             usableAceInt, t.action);
-        stateActionPairCount.getSet((d -> d + 1), dealerCard, playerSum, usableAceInt, t.action);
+        stateActionPairCount.set((d -> d.intValue() + 1), dealerCard, playerSum, usableAceInt,
+            t.action);
       });
       pb.step();
     });
     pb.close();
-    var res = new Vector<Double>();
-    var it1 = stateActionValues.iterator();
-    var it2 = stateActionPairCount.iterator();
-    while (it1.hasNext()) {
-      res.addElement(1.0 * it1.next() / it2.next());
-    }
-    return new MultiDimArray<>(res, stateActionValues.dimensions());
+    return stateActionValues.op(
+        (BinaryOperator<Number>) (d1, d2) -> d1.doubleValue() / d2.doubleValue(),
+        stateActionPairCount);
   }
 
   void figure5_2() throws IOException {
@@ -258,14 +257,14 @@ public class BlackJack {
         var i1 = 0;
         for (int a = 0; a < 2; a++) {
           var v0 = esStateActionValues.get(i, j, 0, a);
-          if (v0 > m0) {
+          if (v0.doubleValue() > m0) {
             i0 = a;
-            m0 = v0;
+            m0 = v0.doubleValue();
           }
           var v1 = esStateActionValues.get(i, j, 1, a);
-          if (v1 > m1) {
+          if (v1.doubleValue() > m1) {
             i1 = a;
-            m1 = v1;
+            m1 = v1.doubleValue();
           }
         }
         stateValueNoUsableAce.add(new Number[]{i, j, Utils.round(m0, 2)});
@@ -323,11 +322,11 @@ public class BlackJack {
    * one(greedy).
    */
   static class ESBehaviorPolicy implements TriFunction<Boolean, Integer, Integer, Integer> {
-    MultiDimArray<Integer> stateActionValues;
-    MultiDimArray<Integer> stateActionPairCount;
+    MultiDimArray stateActionValues;
+    MultiDimArray stateActionPairCount;
 
-    public ESBehaviorPolicy(MultiDimArray<Integer> stateActionValues,
-                            MultiDimArray<Integer> stateActionPairCount) {
+    public ESBehaviorPolicy(MultiDimArray stateActionValues,
+                            MultiDimArray stateActionPairCount) {
       this.stateActionValues = stateActionValues;
       this.stateActionPairCount = stateActionPairCount;
     }
@@ -339,8 +338,8 @@ public class BlackJack {
       dealerCard -= 1;
       var vs = new Vector<Double>();
       for (int i = 0; i < ACTIONS.length; i++) {
-        vs.add(1.0 * stateActionValues.get(dealerCard, playerSum, usableAceInt, i) /
-            stateActionPairCount.get(dealerCard, playerSum, usableAceInt, i));
+        vs.add(stateActionValues.get(dealerCard, playerSum, usableAceInt, i).doubleValue() /
+            stateActionPairCount.get(dealerCard, playerSum, usableAceInt, i).doubleValue());
       }
       return Utils.argmax(vs.toArray(Double[]::new));
     }
