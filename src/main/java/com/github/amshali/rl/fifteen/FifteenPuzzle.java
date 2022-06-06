@@ -68,9 +68,9 @@ public class FifteenPuzzle {
 
   public void run() throws InterruptedException {
     // Generating state space
-    init(FifteenState.ONE_TO_FOUR_SOLVED_STATE, FifteenPuzzleEpisode.ONE_TO_FOUR);
-    init(FifteenState.FIVE_TO_EIGHT_SOLVED_STATE, FifteenPuzzleEpisode.FIVE_TO_EIGHT);
-    init(FifteenState.SOLVED_STATE, FifteenPuzzleEpisode.NINE_TO_FIFTEEN);
+    init(FifteenState.ONE_TO_FOUR_SOLVED_STATE, 0);
+    init(FifteenState.FIVE_TO_EIGHT_SOLVED_STATE, 1);
+    init(FifteenState.SOLVED_STATE, 2);
     calculateOptimalValues();
     calculateOptimalPolicy();
     printBadStates();
@@ -212,9 +212,9 @@ public class FifteenPuzzle {
     pb.close();
   }
 
-  private void init(FifteenState initState, FifteenPuzzleEpisode episode) {
+  private void init(FifteenState finalState, int rowsSolved) {
     var work = new LinkedBlockingQueue<FifteenState>();
-    work.offer(initState);
+    work.offer(finalState);
     var seen = new HashSet<>();
     while (work.size() > 0) {
       var w = work.poll();
@@ -222,7 +222,7 @@ public class FifteenPuzzle {
       if (!w.isTerminal()) {
         w.setValue(random.nextDouble());
       }
-      w.actionsOf(episode).forEach(a -> {
+      w.actionsOf(rowsSolved).forEach(a -> {
         var ns = w.nextState(a);
         if (!seen.contains(ns.hash())) {
           states.putIfAbsent(ns.hash(), ns);

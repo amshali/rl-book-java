@@ -6,13 +6,12 @@ import java.util.*;
 
 public class FifteenState {
   public static final int NUM_CELLS = 16;
-  public static final int NIL_VALUE = 16;
   public static FifteenState ONE_TO_FOUR_SOLVED_STATE = new FifteenState(
-      new Integer[]{1, 2, 3, 4, NIL_VALUE, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1});
+      new Integer[]{1, 2, 3, 4, NUM_CELLS, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1});
   public static FifteenState FIVE_TO_EIGHT_SOLVED_STATE = new FifteenState(
-      new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, NIL_VALUE, -1, -1, -1, -1, -1, -1, -1});
+      new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, NUM_CELLS, -1, -1, -1, -1, -1, -1, -1});
   public static FifteenState SOLVED_STATE = new FifteenState(
-      new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NIL_VALUE});
+      new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NUM_CELLS});
   /**
    * Map of action to next states for this state.
    */
@@ -20,8 +19,7 @@ public class FifteenState {
   private final Integer[] numbers;
   private final String hash;
   private final int rowsSolved;
-  private FifteenPuzzleEpisode episode;
-  private int nilIndex;
+  private int emptyCellIndex;
   private Double value = 0.0;
 
   public FifteenState(Integer[] numbers) {
@@ -30,29 +28,31 @@ public class FifteenState {
     }
     this.numbers = numbers;
     rowsSolved = countRowsSolved(numbers);
-    episode = FifteenPuzzleEpisode.ONE_TO_FOUR;
-    if (rowsSolved == 1) {
-      episode = FifteenPuzzleEpisode.FIVE_TO_EIGHT;
-    } else if (rowsSolved == 2) {
-      episode = FifteenPuzzleEpisode.NINE_TO_FIFTEEN;
-    } else if (rowsSolved == 4) {
-      episode = FifteenPuzzleEpisode.SOLVED;
-    }
-    hash = generateHash(this.numbers, episode);
+    hash = generateHash(this.numbers, rowsSolved);
     for (int i = 0; i < this.numbers.length; i++) {
-      if (this.numbers[i] == NIL_VALUE) {
-        nilIndex = i;
+      if (this.numbers[i] == NUM_CELLS) {
+        emptyCellIndex = i;
       }
     }
   }
 
   public static int countRowsSolved(Integer[] numbers) {
-    for (int i = 0; i < NUM_CELLS - 1; i++) {
+    int i = 0;
+    for (; i < NUM_CELLS; i++) {
       if (numbers[i] != i + 1) {
-        return i / 4;
+        break;
       }
     }
-    return (int) Math.sqrt(NUM_CELLS);
+    if (i < 4) {
+      return 0;
+    }
+    if (i < 8) {
+      return 1;
+    }
+    if (i < NUM_CELLS) {
+      return 2;
+    }
+    return 4;
   }
 
   public static int countMasked(Integer[] numbers) {
@@ -68,7 +68,7 @@ public class FifteenState {
   public static Integer[] mask(Integer[] numbers, int lower, int upper) {
     var r = new Integer[numbers.length];
     for (int i = 0; i < numbers.length; i++) {
-      if ((numbers[i] < lower || numbers[i] > upper) && numbers[i] != NIL_VALUE) {
+      if ((numbers[i] < lower || numbers[i] > upper) && numbers[i] != NUM_CELLS) {
         r[i] = -1;
       } else {
         r[i] = numbers[i];
@@ -77,13 +77,13 @@ public class FifteenState {
     return r;
   }
 
-  public static String generateHash(Integer[] numbers, FifteenPuzzleEpisode episode) {
-    return switch (episode) {
-      case ONE_TO_FOUR -> Utils.join(
+  public static String generateHash(Integer[] numbers, int rowsSolved) {
+    return switch (rowsSolved) {
+      case 0 -> Utils.join(
           Arrays.stream(mask(numbers, 1, 4)).toArray(), ",");
-      case FIVE_TO_EIGHT -> Utils.join(
+      case 1 -> Utils.join(
           Arrays.stream(mask(numbers, 1, 8)).toArray(), ",");
-      case NINE_TO_FIFTEEN, SOLVED -> Utils.join(
+      default -> Utils.join(
           Arrays.stream(mask(numbers, 1, 15)).toArray(), ",");
     };
   }
@@ -91,8 +91,8 @@ public class FifteenState {
   public FifteenState nextState(int action) {
     Integer[] ints = Arrays.copyOf(numbers, numbers.length);
     var actionCell = ints[action];
-    ints[action] = NIL_VALUE;
-    ints[nilIndex] = actionCell;
+    ints[action] = NUM_CELLS;
+    ints[emptyCellIndex] = actionCell;
     return new FifteenState(ints);
   }
 
@@ -101,25 +101,20 @@ public class FifteenState {
   }
 
   public boolean isTerminal() {
-    return episode == FifteenPuzzleEpisode.SOLVED ||
+    return rowsSolved == 4 ||
         (rowsSolved == 1 && countMasked(numbers) == 11) ||
         (rowsSolved == 2 && countMasked(numbers) == 7);
   }
 
   public boolean isSolved() {
-    return episode == FifteenPuzzleEpisode.SOLVED;
+    return rowsSolved == 4;
   }
 
-  public List<Integer> actionsOf(FifteenPuzzleEpisode episode) {
+  public List<Integer> actionsOf(int rowBound) {
     final List<Integer> possibleActions = new ArrayList<>();
     int width = (int) Math.sqrt(NUM_CELLS);
-    var row = nilIndex / width;
-    var col = nilIndex % width;
-    var rowBound = 0;
-    switch (episode) {
-      case FIVE_TO_EIGHT -> rowBound = 1;
-      case NINE_TO_FIFTEEN -> rowBound = 2;
-    }
+    var row = emptyCellIndex / width;
+    var col = emptyCellIndex % width;
     if (row - 1 >= rowBound) {
       possibleActions.add(width * (row - 1) + col);
     }
@@ -136,11 +131,11 @@ public class FifteenState {
   }
 
   public List<Integer> possibleActions() {
-    return actionsOf(FifteenPuzzleEpisode.SOLVED);
+    return actionsOf(0);
   }
 
   public List<Integer> goodActions() {
-    return actionsOf(episode);
+    return actionsOf(rowsSolved);
   }
 
   public Double value() {
@@ -162,7 +157,7 @@ public class FifteenState {
       if (i % width == 0) {
         sb.append("\n|");
       }
-      if (numbers[i] == NIL_VALUE) {
+      if (numbers[i] == NUM_CELLS) {
         sb.append("   |");
       } else {
         sb.append("%3d|".formatted(numbers[i]));
