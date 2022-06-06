@@ -19,6 +19,7 @@ public class FifteenState {
   private final Integer[] numbers;
   private final String hash;
   private final int rowsSolved;
+  private final boolean terminal;
   private int emptyCellIndex;
   private Double value = 0.0;
 
@@ -27,16 +28,31 @@ public class FifteenState {
       throw new RuntimeException("Invalid size of numbers for state");
     }
     this.numbers = numbers;
-    rowsSolved = countRowsSolved(numbers);
-    hash = generateHash(this.numbers, rowsSolved);
+    rowsSolved = countRowsSolved();
+    var masked = countMasked();
+    terminal = rowsSolved == 4 || (rowsSolved == 1 && masked == 11) || (rowsSolved == 2 && masked == 7);
+    hash = generateHash();
     for (int i = 0; i < this.numbers.length; i++) {
       if (this.numbers[i] == NUM_CELLS) {
         emptyCellIndex = i;
+        break;
       }
     }
   }
 
-  public static int countRowsSolved(Integer[] numbers) {
+  private Integer[] mask(int upper) {
+    return Arrays.stream(numbers).map(a -> (a > upper && a != NUM_CELLS) ? -1 : a).toArray(Integer[]::new);
+  }
+
+  private String generateHash() {
+    return switch (rowsSolved) {
+      case 0 -> Utils.join(Arrays.stream(mask(4)).toArray(), ",");
+      case 1 -> Utils.join(Arrays.stream(mask(8)).toArray(), ",");
+      default -> Utils.join(Arrays.stream(mask(15)).toArray(), ",");
+    };
+  }
+
+  private int countRowsSolved() {
     int i = 0;
     for (; i < NUM_CELLS; i++) {
       if (numbers[i] != i + 1) {
@@ -55,37 +71,8 @@ public class FifteenState {
     return 4;
   }
 
-  public static int countMasked(Integer[] numbers) {
-    int c = 0;
-    for (Integer number : numbers) {
-      if (number == -1) {
-        c++;
-      }
-    }
-    return c;
-  }
-
-  public static Integer[] mask(Integer[] numbers, int lower, int upper) {
-    var r = new Integer[numbers.length];
-    for (int i = 0; i < numbers.length; i++) {
-      if ((numbers[i] < lower || numbers[i] > upper) && numbers[i] != NUM_CELLS) {
-        r[i] = -1;
-      } else {
-        r[i] = numbers[i];
-      }
-    }
-    return r;
-  }
-
-  public static String generateHash(Integer[] numbers, int rowsSolved) {
-    return switch (rowsSolved) {
-      case 0 -> Utils.join(
-          Arrays.stream(mask(numbers, 1, 4)).toArray(), ",");
-      case 1 -> Utils.join(
-          Arrays.stream(mask(numbers, 1, 8)).toArray(), ",");
-      default -> Utils.join(
-          Arrays.stream(mask(numbers, 1, 15)).toArray(), ",");
-    };
+  private int countMasked() {
+    return Arrays.stream(numbers).filter(i -> (i == -1)).toArray().length;
   }
 
   public FifteenState nextState(int action) {
@@ -101,9 +88,7 @@ public class FifteenState {
   }
 
   public boolean isTerminal() {
-    return rowsSolved == 4 ||
-        (rowsSolved == 1 && countMasked(numbers) == 11) ||
-        (rowsSolved == 2 && countMasked(numbers) == 7);
+    return terminal;
   }
 
   public boolean isSolved() {
