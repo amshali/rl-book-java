@@ -3,6 +3,7 @@ package com.github.amshali.rl.fifteen;
 import sutton.barto.rlbook.Utils;
 
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class FifteenState {
   public static final int NUM_CELLS = 16;
@@ -20,7 +21,7 @@ public class FifteenState {
   private final String hash;
   private final int rowsSolved;
   private final boolean terminal;
-  private int emptyCellIndex;
+  private final int emptyCellIndex;
   private Double value = 0.0;
 
   public FifteenState(Integer[] numbers) {
@@ -32,12 +33,8 @@ public class FifteenState {
     var masked = countMasked();
     terminal = rowsSolved == 4 || (rowsSolved == 1 && masked == 11) || (rowsSolved == 2 && masked == 7);
     hash = generateHash();
-    for (int i = 0; i < this.numbers.length; i++) {
-      if (this.numbers[i] == NUM_CELLS) {
-        emptyCellIndex = i;
-        break;
-      }
-    }
+    emptyCellIndex = IntStream.range(0, this.numbers.length).filter(i -> this.numbers[i] == NUM_CELLS)
+        .findFirst().orElseThrow();
   }
 
   private Integer[] mask(int upper) {
