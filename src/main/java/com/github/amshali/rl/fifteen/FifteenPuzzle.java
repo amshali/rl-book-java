@@ -68,9 +68,9 @@ public class FifteenPuzzle {
 
   public void run() throws InterruptedException {
     // Generating state space
-    init(FifteenState.ONE_TO_FOUR_SOLVED_STATE, 0);
-    init(FifteenState.FIVE_TO_EIGHT_SOLVED_STATE, 1);
-    init(FifteenState.SOLVED_STATE, 2);
+    init(FifteenState.FIRST_ROW_SOLVED_STATE, 0);
+    init(FifteenState.SECOND_ROW_SOLVED_STATE, 1);
+    init(FifteenState.ALL_ROWS_SOLVED_STATE, 2);
     calculateOptimalValues();
     calculateOptimalPolicy();
     printBadStates();
@@ -133,7 +133,7 @@ public class FifteenPuzzle {
   }
 
   private FifteenState generateRandomState() {
-    var s = FifteenState.SOLVED_STATE;
+    var s = FifteenState.ALL_ROWS_SOLVED_STATE;
     var t = 0;
     while (t < 10000) {
       var actions = s.possibleActions();

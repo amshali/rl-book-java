@@ -7,11 +7,11 @@ import java.util.stream.IntStream;
 
 public class FifteenState {
   public static final int NUM_CELLS = 16;
-  public static FifteenState ONE_TO_FOUR_SOLVED_STATE = new FifteenState(
+  public static FifteenState FIRST_ROW_SOLVED_STATE = new FifteenState(
       new Integer[]{1, 2, 3, 4, NUM_CELLS, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-  public static FifteenState FIVE_TO_EIGHT_SOLVED_STATE = new FifteenState(
+  public static FifteenState SECOND_ROW_SOLVED_STATE = new FifteenState(
       new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, NUM_CELLS, 0, 0, 0, 0, 0, 0, 0});
-  public static FifteenState SOLVED_STATE = new FifteenState(
+  public static FifteenState ALL_ROWS_SOLVED_STATE = new FifteenState(
       new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NUM_CELLS});
   /**
    * Map of action to next states for this state.
