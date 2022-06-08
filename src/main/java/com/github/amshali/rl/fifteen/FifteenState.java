@@ -92,12 +92,12 @@ public class FifteenState {
     return rowsSolved == 4;
   }
 
-  public List<Integer> actionsOf(int rowBound) {
+  public List<Integer> possibleActions() {
     final List<Integer> possibleActions = new ArrayList<>();
     int width = (int) Math.sqrt(NUM_CELLS);
     var row = emptyCellIndex / width;
     var col = emptyCellIndex % width;
-    if (row - 1 >= rowBound) {
+    if (row - 1 >= 0) {
       possibleActions.add(width * (row - 1) + col);
     }
     if (row + 1 < width) {
@@ -110,14 +110,6 @@ public class FifteenState {
       possibleActions.add(width * row + col + 1);
     }
     return possibleActions;
-  }
-
-  public List<Integer> possibleActions() {
-    return actionsOf(0);
-  }
-
-  public List<Integer> goodActions() {
-    return actionsOf(rowsSolved);
   }
 
   public Double value() {

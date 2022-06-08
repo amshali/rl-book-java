@@ -68,9 +68,9 @@ public class FifteenPuzzle {
 
   public void run() throws InterruptedException {
     // Generating state space
-    init(FifteenState.FIRST_ROW_SOLVED_STATE, 0);
-    init(FifteenState.SECOND_ROW_SOLVED_STATE, 1);
-    init(FifteenState.ALL_ROWS_SOLVED_STATE, 2);
+    generateStatesFrom(FifteenState.FIRST_ROW_SOLVED_STATE);
+    generateStatesFrom(FifteenState.SECOND_ROW_SOLVED_STATE);
+    generateStatesFrom(FifteenState.ALL_ROWS_SOLVED_STATE);
     calculateOptimalValues();
     calculateOptimalPolicy();
     printBadStates();
@@ -212,7 +212,7 @@ public class FifteenPuzzle {
     pb.close();
   }
 
-  private void init(FifteenState finalState, int rowsSolved) {
+  private void generateStatesFrom(FifteenState finalState) {
     var work = new LinkedBlockingQueue<FifteenState>();
     work.offer(finalState);
     var seen = new HashSet<>();
@@ -222,12 +222,12 @@ public class FifteenPuzzle {
       if (!w.isTerminal()) {
         w.setValue(random.nextDouble());
       }
-      w.actionsOf(rowsSolved).forEach(a -> {
+      w.possibleActions().forEach(a -> {
         var ns = w.nextState(a);
         if (!seen.contains(ns.hash())) {
           states.putIfAbsent(ns.hash(), ns);
-          var goodActions = ns.goodActions();
-          policy.put(ns.hash(), goodActions.get(random.nextInt(goodActions.size())));
+          var possibleActions = ns.possibleActions();
+          policy.put(ns.hash(), possibleActions.get(random.nextInt(possibleActions.size())));
           work.offer(ns);
           seen.add(ns.hash());
         }
@@ -235,7 +235,7 @@ public class FifteenPuzzle {
     }
     states.keySet().parallelStream().forEach(h -> {
       var s = states.get(h);
-      s.goodActions().forEach(a -> {
+      s.possibleActions().forEach(a -> {
         var ns = s.nextState(a);
         s.actionState().put(a, ns.hash());
       });
