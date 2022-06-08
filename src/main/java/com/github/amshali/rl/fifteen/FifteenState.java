@@ -8,9 +8,9 @@ import java.util.stream.IntStream;
 public class FifteenState {
   public static final int NUM_CELLS = 16;
   public static FifteenState ONE_TO_FOUR_SOLVED_STATE = new FifteenState(
-      new Integer[]{1, 2, 3, 4, NUM_CELLS, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1});
+      new Integer[]{1, 2, 3, 4, NUM_CELLS, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
   public static FifteenState FIVE_TO_EIGHT_SOLVED_STATE = new FifteenState(
-      new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, NUM_CELLS, -1, -1, -1, -1, -1, -1, -1});
+      new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, NUM_CELLS, 0, 0, 0, 0, 0, 0, 0});
   public static FifteenState SOLVED_STATE = new FifteenState(
       new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, NUM_CELLS});
   /**
@@ -38,7 +38,7 @@ public class FifteenState {
   }
 
   private Integer[] mask(int upper) {
-    return Arrays.stream(numbers).map(a -> (a > upper && a != NUM_CELLS) ? -1 : a).toArray(Integer[]::new);
+    return Arrays.stream(numbers).map(a -> (a > upper && a != NUM_CELLS) ? 0 : a).toArray(Integer[]::new);
   }
 
   private String generateHash() {
@@ -69,7 +69,7 @@ public class FifteenState {
   }
 
   private int countMasked() {
-    return Arrays.stream(numbers).filter(i -> (i == -1)).toArray().length;
+    return Arrays.stream(numbers).filter(i -> (i == 0)).toArray().length;
   }
 
   public FifteenState nextState(int action) {
