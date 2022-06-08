@@ -214,14 +214,19 @@ public class FifteenPuzzle {
 
   private void generateStatesFrom(FifteenState finalState) {
     var work = new LinkedBlockingQueue<FifteenState>();
+    // start from a final state:
     work.offer(finalState);
     var seen = new HashSet<>();
     while (work.size() > 0) {
       var w = work.poll();
       states.putIfAbsent(w.hash(), w);
       if (!w.isTerminal()) {
+        // set its value to something random:
         w.setValue(random.nextDouble());
       }
+      // For all the possible actions we can take from that final state
+      // generate the next states and explore those new states, if any.
+      // This is as if we are scrambling a solved puzzle:
       w.possibleActions().forEach(a -> {
         var ns = w.nextState(a);
         if (!seen.contains(ns.hash())) {
