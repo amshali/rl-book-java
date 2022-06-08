@@ -17,6 +17,10 @@ public class FifteenState {
    * Map of action to next states for this state.
    */
   private final Map<Integer, String> actionState = new HashMap<>();
+
+  /**
+   * The numbers array which represents values in various cells.
+   */
   private final Integer[] numbers;
   private final String hash;
   private final int rowsSolved;
@@ -50,20 +54,16 @@ public class FifteenState {
   }
 
   private int countRowsSolved() {
-    int i = 0;
-    for (; i < NUM_CELLS; i++) {
+    for (int i = 0; i < NUM_CELLS; i++) {
       if (numbers[i] != i + 1) {
-        break;
+        if (i < 4) {
+          return 0;
+        }
+        if (i < 8) {
+          return 1;
+        }
+        return 2;
       }
-    }
-    if (i < 4) {
-      return 0;
-    }
-    if (i < 8) {
-      return 1;
-    }
-    if (i < NUM_CELLS) {
-      return 2;
     }
     return 4;
   }
