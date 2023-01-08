@@ -73,7 +73,7 @@ public class FifteenState {
   }
 
   public FifteenState nextState(int action) {
-    Integer[] ints = Arrays.copyOf(numbers, numbers.length);
+    var ints = Arrays.copyOf(numbers, numbers.length);
     var actionCell = ints[action];
     ints[action] = NUM_CELLS;
     ints[emptyCellIndex] = actionCell;
@@ -125,7 +125,7 @@ public class FifteenState {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     int width = (int) Math.sqrt(NUM_CELLS);
     for (int i = 0; i < numbers.length; i++) {
       if (i % width == 0) {
